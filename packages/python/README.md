@@ -2,6 +2,9 @@
 
 Typed client for the clean NinjaChat API v1.
 
+> [!IMPORTANT]
+> `nj_sk_` API keys are server-side secrets. Never ship one in browser, mobile, desktop, or other distributed client code. Load keys from a server-side secret manager or environment variable.
+
 ```bash
 pip install ninjachat
 ```

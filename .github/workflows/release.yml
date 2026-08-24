@@ -5,18 +5,25 @@ on:
     tags:
       - "v*"
 
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
 permissions:
   contents: read
 
 jobs:
   verify:
     runs-on: ubuntu-latest
+    timeout-minutes: 20
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          persist-credentials: false
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: "24"
-      - uses: actions/setup-python@v7
+      - uses: actions/setup-python@5fda3b95a4ea91299a34e894583c3862153e4b97 # v7
         with:
           python-version: "3.12"
       - run: npm ci
@@ -29,50 +36,75 @@ jobs:
           test "$GITHUB_REF_NAME" = "v$VERSION"
           npm run verify
           python -m unittest discover -s packages/python/tests -t packages/python
-          python -m build packages/python
+      - name: Build npm package
+        run: |
+          mkdir -p release-package
+          npm pack --pack-destination release-package
+        working-directory: packages/typescript
+      - name: Build Python packages
+        run: |
+          python -m build packages/python --outdir packages/python/dist
           python -m twine check packages/python/dist/*
+      - name: Preserve npm package for the isolated publish job
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: npm-package
+          path: |
+            packages/typescript/package.json
+            packages/typescript/release-package/*.tgz
+          if-no-files-found: error
+          retention-days: 1
+      - name: Preserve Python packages for the isolated publish job
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        with:
+          name: pypi-package
+          path: packages/python/dist/*
+          if-no-files-found: error
+          retention-days: 1
 
   publish-npm:
     needs: verify
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     environment: npm
     permissions:
+      actions: read
       contents: read
       id-token: write
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-node@v7
+      - uses: actions/setup-node@820762786026740c76f36085b0efc47a31fe5020 # v7
         with:
           node-version: "24"
           registry-url: "https://registry.npmjs.org"
-      - run: npm ci
-        working-directory: packages/typescript
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
+        with:
+          name: npm-package
+          path: release/npm
       - name: Publish @ninjachat/sdk
         run: |
-          VERSION="$(node -p "require('./package.json').version")"
+          VERSION="$(node -p "require('./release/npm/package.json').version")"
           if npm view "@ninjachat/sdk@$VERSION" version >/dev/null 2>&1; then
             echo "@ninjachat/sdk@$VERSION is already published; skipping."
           else
-            npm publish --access public
+            npm publish release/npm/release-package/*.tgz --access public --provenance
           fi
-        working-directory: packages/typescript
 
   publish-pypi:
     needs: verify
     runs-on: ubuntu-latest
+    timeout-minutes: 10
     environment: pypi
     permissions:
+      actions: read
       contents: read
       id-token: write
     steps:
-      - uses: actions/checkout@v7
-      - uses: actions/setup-python@v7
+      - uses: actions/download-artifact@3e5f45b2cfb9172054b4087a40e8e0b5a5461e7c # v8
         with:
-          python-version: "3.12"
-      - run: python -m pip install --disable-pip-version-check build
-      - run: python -m build packages/python
+          name: pypi-package
+          path: release/pypi
       - name: Publish ninjachat
-        uses: pypa/gh-action-pypi-publish@release/v1
+        uses: pypa/gh-action-pypi-publish@dc37677b2e1c63e2034f94d8a5b11f265b73ba33 # release/v1
         with:
-          packages-dir: packages/python/dist/
+          packages-dir: release/pypi/
           skip-existing: true

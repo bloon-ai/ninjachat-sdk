@@ -46,10 +46,15 @@ const DEFAULT_MAX_RETRIES = 2;
 const MAX_BACKOFF_MS = 30_000;
 
 export interface NinjaChatOptions {
-  /** Your API key (nj_sk_...). */
+  /** Your secret API key (nj_sk_...). Never expose it in browser or client-side code. */
   apiKey: string;
-  /** Defaults to https://www.ninjachat.ai/api/v1 — always use the www host. */
+  /** Defaults to https://www.ninjachat.ai/api/v1. HTTPS is required except on localhost. */
   baseUrl?: string;
+  /**
+   * Allows a secret key in a browser runtime. This exposes the key to end users
+   * and is almost never safe. Server-side use is strongly recommended.
+   */
+  dangerouslyAllowBrowser?: boolean;
   /** Retries on 429/5xx (default 2). Set 0 to disable. */
   maxRetries?: number;
   /** Per-request timeout in ms (default 120000; video submits use 300000). */
@@ -108,8 +113,45 @@ function retryDelayMs(response: Response | null, attempt: number): number {
   return Math.min(base + Math.random() * base, MAX_BACKOFF_MS);
 }
 
+function isBrowserRuntime(): boolean {
+  return typeof window !== "undefined" && typeof document !== "undefined";
+}
+
+function normalizeBaseUrl(value: string): string {
+  let url: URL;
+  try {
+    url = new URL(value);
+  } catch {
+    throw new NinjaChatError({
+      message: "baseUrl must be a valid absolute URL.",
+      status: 0,
+      code: "invalid_base_url",
+    });
+  }
+
+  const localHostnames = new Set(["localhost", "127.0.0.1", "::1"]);
+  const secure = url.protocol === "https:";
+  const localHttp = url.protocol === "http:" && localHostnames.has(url.hostname);
+  if (!secure && !localHttp) {
+    throw new NinjaChatError({
+      message: "baseUrl must use HTTPS. Plain HTTP is allowed only for localhost development.",
+      status: 0,
+      code: "insecure_base_url",
+    });
+  }
+  if (url.username || url.password || url.search || url.hash) {
+    throw new NinjaChatError({
+      message: "baseUrl must not contain credentials, query parameters, or a fragment.",
+      status: 0,
+      code: "invalid_base_url",
+    });
+  }
+
+  return url.toString().replace(/\/+$/, "");
+}
+
 export class NinjaChat {
-  private readonly apiKey: string;
+  readonly #apiKey: string;
   private readonly baseUrl: string;
   private readonly maxRetries: number;
   private readonly timeoutMs: number;
@@ -132,8 +174,16 @@ export class NinjaChat {
         code: "missing_api_key",
       });
     }
-    this.apiKey = options.apiKey;
-    this.baseUrl = (options.baseUrl ?? DEFAULT_BASE_URL).replace(/\/+$/, "");
+    if (isBrowserRuntime() && !options.dangerouslyAllowBrowser) {
+      throw new NinjaChatError({
+        message:
+          "Secret NinjaChat API keys must not be used in browser code. Keep API calls on your server, or set dangerouslyAllowBrowser only if you fully accept the exposure risk.",
+        status: 0,
+        code: "browser_api_key_forbidden",
+      });
+    }
+    this.#apiKey = options.apiKey;
+    this.baseUrl = normalizeBaseUrl(options.baseUrl ?? DEFAULT_BASE_URL);
     this.maxRetries = options.maxRetries ?? DEFAULT_MAX_RETRIES;
     this.timeoutMs = options.timeoutMs ?? 120_000;
     this.fetchFn = options.fetch ?? globalThis.fetch.bind(globalThis);
@@ -196,7 +246,7 @@ export class NinjaChat {
     }
 
     const headers: Record<string, string> = {
-      Authorization: `Bearer ${this.apiKey}`,
+      Authorization: `Bearer ${this.#apiKey}`,
       Accept: req.stream ? "text/event-stream" : "application/json",
     };
     if (req.body !== undefined) headers["Content-Type"] = "application/json";

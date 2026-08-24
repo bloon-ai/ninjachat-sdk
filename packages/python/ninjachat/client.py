@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 import json as _json
-import random
+import secrets
 import time
 import uuid
 from typing import Any, Dict, Iterator, List, Optional, Union
-from urllib.parse import quote
+from urllib.parse import quote, urlsplit
 
 import requests as http_requests
 
@@ -25,6 +25,30 @@ MAX_BACKOFF_SECONDS = 30.0
 RETRIABLE_STATUSES = {429, 500, 502, 503, 504}
 
 
+def _normalize_base_url(value: str) -> str:
+    try:
+        parsed = urlsplit(value)
+        hostname = parsed.hostname
+    except ValueError as exc:
+        raise NinjaChatError("base_url must be a valid absolute URL.", code="invalid_base_url") from exc
+
+    if not parsed.scheme or not parsed.netloc or hostname is None:
+        raise NinjaChatError("base_url must be a valid absolute URL.", code="invalid_base_url")
+    secure = parsed.scheme.lower() == "https"
+    local_http = parsed.scheme.lower() == "http" and hostname.lower() in {"localhost", "127.0.0.1", "::1"}
+    if not secure and not local_http:
+        raise NinjaChatError(
+            "base_url must use HTTPS. Plain HTTP is allowed only for localhost development.",
+            code="insecure_base_url",
+        )
+    if parsed.username or parsed.password or parsed.query or parsed.fragment:
+        raise NinjaChatError(
+            "base_url must not contain credentials, query parameters, or a fragment.",
+            code="invalid_base_url",
+        )
+    return value.rstrip("/")
+
+
 def _retry_delay(response: Optional[http_requests.Response], attempt: int) -> float:
     if response is not None:
         retry_after = response.headers.get("retry-after")
@@ -34,7 +58,8 @@ def _retry_delay(response: Optional[http_requests.Response], attempt: int) -> fl
             except ValueError:
                 pass
     base = 0.5 * (2**attempt)
-    return min(base + random.random() * base, MAX_BACKOFF_SECONDS)
+    jitter = secrets.randbelow(1_000_001) / 1_000_000
+    return min(base + jitter * base, MAX_BACKOFF_SECONDS)
 
 
 def _iterate_sse(response: http_requests.Response) -> Iterator[Dict[str, Any]]:
@@ -84,7 +109,7 @@ class NinjaChat:
                 code="missing_api_key",
             )
         self.api_key = api_key
-        self.base_url = base_url.rstrip("/")
+        self.base_url = _normalize_base_url(base_url)
         self.max_retries = max_retries
         self.timeout = timeout
         self._session = session or http_requests.Session()

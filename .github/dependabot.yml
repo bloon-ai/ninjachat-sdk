@@ -3,12 +3,12 @@ updates:
   - package-ecosystem: npm
     directory: /packages/typescript
     schedule:
-      interval: monthly
+      interval: weekly
   - package-ecosystem: pip
     directory: /packages/python
     schedule:
-      interval: monthly
+      interval: weekly
   - package-ecosystem: github-actions
     directory: /
     schedule:
-      interval: monthly
+      interval: weekly

@@ -27,6 +27,18 @@ class NinjaChatSmokeTest(unittest.TestCase):
     def test_preview_version_is_synchronized(self) -> None:
         self.assertEqual(__version__, "0.1.0")
 
+    def test_rejects_insecure_remote_base_urls(self) -> None:
+        with self.assertRaises(NinjaChatError) as raised:
+            NinjaChat(api_key="nj_sk_test", base_url="http://example.com/api/v1")
+        self.assertEqual(raised.exception.code, "insecure_base_url")
+
+        with self.assertRaises(NinjaChatError) as credentialed:
+            NinjaChat(api_key="nj_sk_test", base_url="https://user:pass@example.com/api/v1")
+        self.assertEqual(credentialed.exception.code, "invalid_base_url")
+
+        client = NinjaChat(api_key="nj_sk_test", base_url="http://localhost:3000/api/v1")
+        self.assertEqual(client.base_url, "http://localhost:3000/api/v1")
+
 
 if __name__ == "__main__":
     unittest.main()

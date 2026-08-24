@@ -50,10 +50,12 @@ git tag -a v0.1.1 -m "NinjaChat SDK v0.1.1"
 git push origin v0.1.1
 ```
 
-Pushing `vX.Y.Z` starts `.github/workflows/release.yml`. The workflow verifies that the tag matches both package versions, rebuilds and tests both SDKs, and publishes:
+Pushing `vX.Y.Z` starts `.github/workflows/release.yml`. The workflow verifies that the tag matches both package versions, rebuilds and tests both SDKs, uploads short-lived immutable build artifacts, and then publishes those exact artifacts from isolated OIDC jobs that do not install dependencies or execute package build hooks:
 
 - `@ninjachat/sdk` to npm through the `npm` GitHub environment
 - `ninjachat` to PyPI through the `pypi` GitHub environment
+
+All third-party actions are pinned to immutable commit SHAs. Dependabot proposes reviewed SHA updates; do not replace pins with mutable version tags.
 
 Watch the Release workflow until all three jobs are green. Afterward, verify the public packages from clean environments:
 
@@ -75,4 +77,3 @@ Current registry pages:
 
 - npm: <https://www.npmjs.com/package/@ninjachat/sdk>
 - PyPI: <https://pypi.org/project/ninjachat/>
-

@@ -2,6 +2,9 @@
 
 Official TypeScript and Python clients for the [NinjaChat API](https://docs.ninjachat.ai): one API for chat, responses, images, video, routing, usage, request traces, and webhooks.
 
+> [!IMPORTANT]
+> NinjaChat API keys are server-side secrets. Never embed an `nj_sk_` key in browser, mobile, desktop, or other distributed client code; route those requests through a backend you control and load keys from a secret manager or environment variable.
+
 ## TypeScript
 
 ```bash

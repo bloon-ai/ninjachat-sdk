@@ -2,6 +2,9 @@
 
 Clean API v1 client for Responses, Chat Completions, models, images, videos, search, usage, balance, request traces, and webhooks.
 
+> [!IMPORTANT]
+> `nj_sk_` API keys are server-side secrets. Never put one in browser, mobile, desktop, or other distributed client code. The SDK rejects browser use by default; send requests through your backend instead. `dangerouslyAllowBrowser` is an explicit escape hatch for exceptional cases where exposing the key is understood and accepted.
+
 ```bash
 npm install @ninjachat/sdk
 ```
