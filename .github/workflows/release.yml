@@ -48,7 +48,13 @@ jobs:
       - run: npm ci
         working-directory: packages/typescript
       - name: Publish @ninjachat/sdk
-        run: npm publish --access public
+        run: |
+          VERSION="$(node -p "require('./package.json').version")"
+          if npm view "@ninjachat/sdk@$VERSION" version >/dev/null 2>&1; then
+            echo "@ninjachat/sdk@$VERSION is already published; skipping."
+          else
+            npm publish --access public
+          fi
         working-directory: packages/typescript
 
   publish-pypi:
@@ -69,3 +75,4 @@ jobs:
         uses: pypa/gh-action-pypi-publish@release/v1
         with:
           packages-dir: packages/python/dist/
+          skip-existing: true
