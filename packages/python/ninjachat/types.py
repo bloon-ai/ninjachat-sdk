@@ -1,7 +1,11 @@
 """Typed request objects for NinjaChat API v1."""
 
 from typing import Any, Dict, List, Literal, Union
-from typing_extensions import NotRequired, Required, TypedDict
+
+try:
+    from typing import NotRequired, Required, TypedDict
+except ImportError:  # Python 3.9-3.10
+    from typing_extensions import NotRequired, Required, TypedDict
 
 
 class ProviderPolicy(TypedDict, total=False):

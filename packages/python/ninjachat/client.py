@@ -10,7 +10,11 @@ from typing import Any, Dict, Iterator, List, Optional, Union
 from urllib.parse import quote
 
 import requests as http_requests
-from typing_extensions import Unpack
+
+try:
+    from typing import Unpack
+except ImportError:  # Python 3.9-3.10
+    from typing_extensions import Unpack
 
 from .errors import NinjaChatError
 from .types import ChatCompletionParams, ImageGenerateParams, ResponseCreateParams, SearchParams, VideoGenerateParams
