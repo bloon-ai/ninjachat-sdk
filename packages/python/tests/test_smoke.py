@@ -25,7 +25,7 @@ class NinjaChatSmokeTest(unittest.TestCase):
         self.assertEqual(raised.exception.code, "missing_api_key")
 
     def test_preview_version_is_synchronized(self) -> None:
-        self.assertEqual(__version__, "0.1.0")
+        self.assertEqual(__version__, "0.1.2")
 
     def test_rejects_insecure_remote_base_urls(self) -> None:
         with self.assertRaises(NinjaChatError) as raised:

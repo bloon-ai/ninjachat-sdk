@@ -1,6 +1,6 @@
 {
   "name": "@ninjachat/sdk",
-  "version": "0.1.0",
+  "version": "0.1.2",
   "description": "Official TypeScript SDK for the NinjaChat API — one typed client for chat, responses, media, routing, usage, and webhooks.",
   "license": "MIT",
   "author": "Helium Technologies, Inc.",
