@@ -18,3 +18,5 @@ python -m unittest discover -s packages/python/tests -t packages/python
 ```
 
 Do not commit API keys, credentials, generated build directories, or real customer payloads.
+
+Maintainers preparing a package version should follow [RELEASING.md](RELEASING.md). Do not publish directly from a workstation or add registry write tokens to GitHub.

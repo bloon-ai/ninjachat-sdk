@@ -53,7 +53,9 @@ Create an API key in the [developer console](https://www.ninjachat.ai/developers
 
 ## Releases
 
-TypeScript and Python packages share one version. A signed `vX.Y.Z` tag runs the complete package test matrix and publishes through npm and PyPI Trusted Publishing; the repository stores no registry write tokens.
+TypeScript and Python packages share one version. An annotated `vX.Y.Z` tag runs the complete package test matrix and publishes through npm and PyPI Trusted Publishing; the repository stores no registry write tokens.
+
+Maintainers should follow the complete [release guide](RELEASING.md).
 
 ## Security
 
