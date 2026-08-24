@@ -7,7 +7,7 @@ name = "ninjachat"
 version = "0.1.2"
 description = "Official Python SDK for the NinjaChat API — one typed client for chat, responses, media, routing, usage, and webhooks."
 readme = "README.md"
-requires-python = ">=3.9"
+requires-python = ">=3.10"
 license = "MIT"
 authors = [{ name = "Helium Technologies, Inc." }]
 dependencies = [
@@ -20,7 +20,6 @@ classifiers = [
   "Development Status :: 3 - Alpha",
   "Intended Audience :: Developers",
   "Programming Language :: Python :: 3",
-  "Programming Language :: Python :: 3.9",
   "Programming Language :: Python :: 3.10",
   "Programming Language :: Python :: 3.11",
   "Programming Language :: Python :: 3.12",
