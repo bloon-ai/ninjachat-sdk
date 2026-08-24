@@ -1,0 +1,14 @@
+{
+  "name": "ninjachat-sdk-workspace",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Release workspace for the official NinjaChat TypeScript and Python SDKs.",
+  "scripts": {
+    "verify:metadata": "node scripts/verify-release.mjs",
+    "verify:typescript": "npm --prefix packages/typescript run verify",
+    "verify": "npm run verify:metadata && npm run verify:typescript"
+  },
+  "engines": {
+    "node": ">=22.14"
+  }
+}

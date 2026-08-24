@@ -1,0 +1,71 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: npm ci
+        working-directory: packages/typescript
+      - run: python -m pip install --disable-pip-version-check build twine
+      - run: python -m pip install -e packages/python
+      - name: Verify release tag and packages
+        run: |
+          VERSION="$(node -p "require('./packages/typescript/package.json').version")"
+          test "$GITHUB_REF_NAME" = "v$VERSION"
+          npm run verify
+          python -m unittest discover -s packages/python/tests -t packages/python
+          python -m build packages/python
+          python -m twine check packages/python/dist/*
+
+  publish-npm:
+    needs: verify
+    runs-on: ubuntu-latest
+    environment: npm
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "24"
+          registry-url: "https://registry.npmjs.org"
+      - run: npm ci
+        working-directory: packages/typescript
+      - name: Publish @ninjachat/sdk
+        run: npm publish --access public
+        working-directory: packages/typescript
+
+  publish-pypi:
+    needs: verify
+    runs-on: ubuntu-latest
+    environment: pypi
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - run: python -m pip install --disable-pip-version-check build
+      - run: python -m build packages/python
+      - name: Publish ninjachat
+        uses: pypa/gh-action-pypi-publish@release/v1
+        with:
+          packages-dir: packages/python/dist/

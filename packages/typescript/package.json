@@ -1,0 +1,46 @@
+{
+  "name": "@ninjachat/sdk",
+  "version": "0.1.0",
+  "description": "Official TypeScript SDK for the NinjaChat API — one typed client for chat, responses, media, routing, usage, and webhooks.",
+  "license": "MIT",
+  "author": "Helium Technologies, Inc.",
+  "homepage": "https://docs.ninjachat.ai",
+  "bugs": {
+    "url": "https://github.com/bloon-ai/ninjachat-sdk/issues"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/bloon-ai/ninjachat-sdk.git",
+    "directory": "packages/typescript"
+  },
+  "type": "module",
+  "main": "./dist/index.js",
+  "module": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": ["dist", "README.md", "LICENSE"],
+  "sideEffects": false,
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "typecheck": "tsc --noEmit -p tsconfig.json",
+    "test": "node --test test/smoke.test.mjs",
+    "verify": "npm run typecheck && npm run build && npm test",
+    "prepublishOnly": "npm run verify"
+  },
+  "engines": {
+    "node": ">=18"
+  },
+  "devDependencies": {
+    "typescript": "^5.4.0"
+  },
+  "publishConfig": {
+    "access": "public",
+    "registry": "https://registry.npmjs.org/"
+  },
+  "keywords": ["ninjachat", "ai", "llm", "openai-compatible", "model-router", "sdk"]
+}
