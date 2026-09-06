@@ -4,7 +4,7 @@ from __future__ import annotations
 import asyncio
 import time
 import uuid
-from typing import Any, AsyncIterator, Dict, List, Optional, Union
+from typing import Any, AsyncIterator, Awaitable, Dict, List, Optional, TypeVar, Union
 from urllib.parse import quote
 
 import httpx
@@ -25,6 +25,28 @@ from .types import (
     ImageGenerateParams, PipelineCreateParams, PresetChatCompletionParams,
     ResponseCreateParams, SearchParams, VideoGenerateParams,
 )
+
+
+_T = TypeVar("_T")
+
+
+async def _with_timeout(awaitable: Awaitable[_T], seconds: float) -> _T:
+    # asyncio.wait_for on Python 3.10 can swallow caller cancellation when
+    # the inner task completes concurrently. wait preserves that cancellation.
+    task = asyncio.ensure_future(awaitable)
+    try:
+        done, _ = await asyncio.wait({task}, timeout=seconds)
+        if not done:
+            raise asyncio.TimeoutError()
+        return task.result()
+    except BaseException:
+        task.cancel()
+        result = (await asyncio.gather(task, return_exceptions=True))[0]
+        # Headers may have arrived just as the caller cancelled. No caller
+        # received this response, so this helper owns closing its connection.
+        if isinstance(result, httpx.Response):
+            await result.aclose()
+        raise
 
 
 async def _iterate_sse(response: httpx.Response, kind: Optional[str] = None) -> AsyncIterator[Dict[str, Any]]:
@@ -68,7 +90,7 @@ class AsyncStream:
             if remaining <= 0:
                 raise asyncio.TimeoutError()
             self._pending = asyncio.create_task(anext(self._events))
-            return await asyncio.wait_for(self._pending, remaining)
+            return await _with_timeout(self._pending, remaining)
         except asyncio.TimeoutError as cause:
             await self.aclose()
             raise NinjaChatError("Stream timed out.", code="timeout") from cause
@@ -176,9 +198,9 @@ class AsyncNinjaChat:
                 # httpx timeouts bound individual network operations, not a
                 # response whose body keeps trickling. Own the streamed body so
                 # one wall-clock deadline covers headers and body and cleanup.
-                response = await asyncio.wait_for(self._http.send(request, stream=True), deadline)
+                response = await _with_timeout(self._http.send(request, stream=True), deadline)
                 if not (response.is_success and stream):
-                    await asyncio.wait_for(response.aread(), max(0, started + deadline - time.monotonic()))
+                    await _with_timeout(response.aread(), max(0, started + deadline - time.monotonic()))
                 if response.is_success:
                     if stream:
                         kind = "messages" if path == "/messages" else "responses" if path == "/responses" else "chat" if path.endswith("/chat/completions") else None
@@ -346,7 +368,7 @@ class _Pollable(_Resource):
                     raise NinjaChatError(str(result.get("error") or "Generation failed."), code="generation_failed", request_id=job_id, body=result)
                 await asyncio.sleep(poll_seconds)
         try:
-            return await asyncio.wait_for(poll(), timeout_seconds)
+            return await _with_timeout(poll(), timeout_seconds)
         except asyncio.TimeoutError as cause:
             raise NinjaChatError("Polling timed out; the server job may still complete.", code="poll_timeout", request_id=job_id) from cause
 

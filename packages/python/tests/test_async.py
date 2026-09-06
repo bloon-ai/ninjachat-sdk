@@ -1,6 +1,7 @@
 import asyncio
 import json
 import unittest
+from unittest.mock import patch
 
 import httpx
 
@@ -220,20 +221,56 @@ class AsyncClientTests(unittest.IsolatedAsyncioTestCase):
                 await task
             self.assertTrue(body.closed)
 
-    async def test_cancellation_interrupts_backoff(self):
+    async def test_cancellation_at_header_completion_closes_response(self):
         entered = asyncio.Event()
         calls = 0
+
+        class Body(httpx.AsyncByteStream):
+            closed = False
+
+            async def __aiter__(self):
+                yield b"{}"
+
+            async def aclose(self):
+                self.closed = True
+
+        body = Body()
+
         async def handler(request):
             nonlocal calls
             calls += 1
             entered.set()
-            return httpx.Response(503, json={}, headers={"retry-after": "30"})
+            return httpx.Response(503, stream=body, headers={"retry-after": "30"})
+
         async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as http:
             task = asyncio.create_task(AsyncNinjaChat("test", http_client=http).models.list())
             await entered.wait()
             task.cancel()
             with self.assertRaises(asyncio.CancelledError):
                 await task
+            self.assertEqual(calls, 1)
+            self.assertTrue(body.closed)
+
+    async def test_cancellation_interrupts_backoff(self):
+        entered = asyncio.Event()
+        calls = 0
+
+        async def handler(request):
+            nonlocal calls
+            calls += 1
+            return httpx.Response(503, json={})
+
+        def backoff(*args):
+            entered.set()
+            return 30
+
+        async with httpx.AsyncClient(transport=httpx.MockTransport(handler)) as http:
+            with patch("ninjachat.async_client.retry_delay", side_effect=backoff):
+                task = asyncio.create_task(AsyncNinjaChat("test", http_client=http).models.list())
+                await entered.wait()
+                task.cancel()
+                with self.assertRaises(asyncio.CancelledError):
+                    await task
             self.assertEqual(calls, 1)
 
     async def test_no_retry_for_webhook_creation(self):
