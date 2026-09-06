@@ -32,6 +32,7 @@ class NinjaChatError(Exception):
         type: Optional[str] = None,
         param: Optional[str] = None,
         body: Optional[Dict[str, Any]] = None,
+        retryable: Optional[bool] = None,
     ) -> None:
         super().__init__(message)
         self.message = message
@@ -41,23 +42,25 @@ class NinjaChatError(Exception):
         self.type = type
         self.param = param
         self.body = body or {}
+        self.retryable = retryable
 
     @classmethod
     def from_response(
         cls, status: int, body: Any, header_request_id: Optional[str] = None
     ) -> "NinjaChatError":
         b: Dict[str, Any] = body if isinstance(body, dict) else {}
-        nested = b.get("error") if isinstance(b.get("error"), dict) else {}
+        nested = b.get("error") if isinstance(b.get("error"), dict) else b
         message = nested.get("message") or f"HTTP {status}"
         code = nested.get("code") or f"http_{status}"
         return cls(
             str(message),
             status=status,
             code=str(code),
-            request_id=header_request_id,
+            request_id=header_request_id or b.get("request_id"),
             type=nested.get("type"),
             param=nested.get("param"),
             body=b,
+            retryable=nested.get("retryable", b.get("retryable")),
         )
 
     def __repr__(self) -> str:  # pragma: no cover - cosmetic

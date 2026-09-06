@@ -3,17 +3,22 @@ import test from "node:test";
 
 import { NinjaChat, NinjaChatError } from "../dist/index.js";
 
-test("header deadline does not rely on custom fetch observing its signal", { timeout: 2000 }, async()=>{
-  let lateCancelled=false;
-  let resolveHeaders;
-  const pendingHeaders = new Promise(resolve => { resolveHeaders = resolve; });
-  const client=new NinjaChat({apiKey:"test",maxRetries:0,timeoutMs:5,fetch:()=>pendingHeaders});
-  // The provider cannot respond until after rejection. This proves deadline
-  // independence without a flaky 35ms wall-clock assertion during cold start.
-  await assert.rejects(client.models.list(),error=>error.code==="timeout");
-  resolveHeaders(new Response(new ReadableStream({cancel(){lateCancelled=true;}})));
-  await new Promise(resolve=>setImmediate(resolve));
-  assert.equal(lateCancelled,true);
+test("header deadline does not rely on custom fetch observing its signal", { timeout: 2_000 }, async () => {
+  let releaseHeaders;
+  let lateCancelled = false;
+  const headers = new Promise(resolve => { releaseHeaders = resolve; });
+  const client = new NinjaChat({
+    apiKey: "test", maxRetries: 0, timeoutMs: 5,
+    fetch: () => headers,
+  });
+  try {
+    // Headers remain pending until after the SDK's timeout rejects the call.
+    await assert.rejects(client.models.list(), error => error.code === "timeout");
+  } finally {
+    releaseHeaders(new Response(new ReadableStream({ cancel() { lateCancelled = true; } })));
+  }
+  await new Promise(resolve => setImmediate(resolve));
+  assert.equal(lateCancelled, true);
 });
 
 test("reranking and binary speech share authenticated, idempotent transport",async()=>{

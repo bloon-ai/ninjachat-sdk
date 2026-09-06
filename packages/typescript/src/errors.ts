@@ -18,6 +18,8 @@ export class NinjaChatError extends Error {
   readonly param?: string | null;
   /** The full parsed error body, for extra fields (balance, retry_after, ...). */
   readonly body?: Record<string, unknown>;
+  readonly retryable?: boolean;
+  readonly responseHeaders?: Record<string, string>;
 
   constructor(opts: {
     message: string;
@@ -27,6 +29,8 @@ export class NinjaChatError extends Error {
     type?: string;
     param?: string | null;
     body?: Record<string, unknown>;
+    retryable?: boolean;
+    responseHeaders?: Record<string, string>;
   }) {
     super(opts.message);
     this.name = "NinjaChatError";
@@ -36,22 +40,25 @@ export class NinjaChatError extends Error {
     this.type = opts.type;
     this.param = opts.param;
     this.body = opts.body;
+    this.retryable = opts.retryable;
+    this.responseHeaders = opts.responseHeaders;
   }
 
   static fromResponse(
     status: number,
     body: unknown,
-    headerRequestId?: string | null
+    headerRequestId?: string | null,
+    responseHeaders?: Record<string, string>,
   ): NinjaChatError {
-    const b = (body ?? {}) as Record<string, unknown>;
-    const nested = (b.error ?? {}) as Record<string, unknown>;
+    const b = body && typeof body === "object" && !Array.isArray(body) ? body as Record<string, unknown> : {};
+    const nested = b.error && typeof b.error === "object" ? b.error as Record<string, unknown> : b;
     const message =
       (typeof nested.message === "string" && nested.message) ||
       `HTTP ${status}`;
     const code =
       (typeof nested.code === "string" && nested.code) ||
       `http_${status}`;
-    const requestId = headerRequestId || undefined;
+    const requestId = headerRequestId || (typeof b.request_id === "string" ? b.request_id : undefined);
     return new NinjaChatError({
       message,
       status,
@@ -60,6 +67,8 @@ export class NinjaChatError extends Error {
       type: typeof nested.type === "string" ? nested.type : undefined,
       param: (nested.param as string | null | undefined) ?? null,
       body: b,
+      responseHeaders,
+      retryable: typeof nested.retryable === "boolean" ? nested.retryable : typeof b.retryable === "boolean" ? b.retryable : undefined,
     });
   }
 }

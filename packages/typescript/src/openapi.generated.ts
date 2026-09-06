@@ -3,8 +3,96 @@
  * Do not make direct changes to the file.
  */
 
-// NinjaChat contract SHA-256: bcf3aa3d26a7927cecba74a931de447808ace44b3998e140635af714c4192815
+// NinjaChat contract SHA-256: 6016dd39f511a7254fe7683c41eea5372ae39922610a333a03fec41393c3a3a3
 export interface paths {
+    "/audio/speech": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Generate speech */
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Safely retry the same logical write without duplicate billing or execution. */
+                    "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["SpeechRequest"];
+                };
+            };
+            responses: {
+                /** @description Binary audio. X-Request-ID and X-NinjaChat-Cost-USD identify the billed request. Buffered until successful generation so retries can safely replay. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/octet-stream": string;
+                    };
+                };
+                /** @description Invalid or unsupported request parameter. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Missing or invalid API key. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Insufficient balance or project spend limit reached. */
+                402: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Rate limit exceeded. */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Gateway error. */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/balance": {
         parameters: {
             query?: never;
@@ -80,6 +168,303 @@ export interface paths {
         };
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/batch": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Run a batch of chat requests */
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Safely retry the same logical write without duplicate billing or execution. */
+                    "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            responses: {
+                /** @description Batch results or SSE stream. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": Record<string, never>;
+                        "text/event-stream": string;
+                    };
+                };
+                /** @description Invalid or unsupported request parameter. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Missing or invalid API key. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Insufficient balance or project spend limit reached. */
+                402: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Rate limit exceeded. */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Gateway error. */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/battles": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get model battle rankings */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Leaderboard or recent battles. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": Record<string, never>;
+                    };
+                };
+                /** @description Gateway error. */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /** Record an authenticated model ranking */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            responses: {
+                /** @description Updated ELO rankings. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": Record<string, never>;
+                    };
+                };
+                /** @description Invalid or unsupported request parameter. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Missing or invalid API key. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Insufficient balance or project spend limit reached. */
+                402: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Rate limit exceeded. */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Gateway error. */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/chat": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create a chat completion (legacy path)
+         * @description Supported compatibility surface — kept working indefinitely, but not the path for new integrations. Modern equivalent: `POST /responses`.
+         *
+         *     Backward-compatible path for /chat/completions, including historical field spellings and session memory.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Safely retry the same logical write without duplicate billing or execution. */
+                    "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            responses: {
+                /** @description Chat completion or SSE stream. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ChatCompletionResponse"];
+                        "text/event-stream": string;
+                    };
+                };
+                /** @description Invalid or unsupported request parameter. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Missing or invalid API key. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Insufficient balance or project spend limit reached. */
+                402: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Rate limit exceeded. */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Gateway error. */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
@@ -178,6 +563,247 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/compare": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Compare multiple chat models */
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Safely retry the same logical write without duplicate billing or execution. */
+                    "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            responses: {
+                /** @description Ranked model results or SSE stream. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": Record<string, never>;
+                        "text/event-stream": string;
+                    };
+                };
+                /** @description Invalid or unsupported request parameter. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Missing or invalid API key. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Insufficient balance or project spend limit reached. */
+                402: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Rate limit exceeded. */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Gateway error. */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/embeddings": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create embeddings
+         * @description Exact-model text embeddings. OpenAI text-embedding-3-small: $0.02 per million input tokens. Voyage voyage-4-large: $0.12 per million. Charges round up to the wallet's $0.0001 precision. No cross-model fallback or input truncation by default.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Safely retry the same logical write without duplicate billing or execution. */
+                    "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["EmbeddingsRequest"];
+                };
+            };
+            responses: {
+                /** @description Ordered embeddings and metered token usage. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["EmbeddingsResponse"];
+                    };
+                };
+                /** @description Invalid or unsupported request parameter. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Missing or invalid API key. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Insufficient balance or project spend limit reached. */
+                402: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Rate limit exceeded. */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Gateway error. */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/estimate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Estimate request cost
+         * @description Public pre-flight estimate; does not deduct credits.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            responses: {
+                /** @description Estimated typical and maximum cost. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": Record<string, never>;
+                    };
+                };
+                /** @description Invalid or unsupported request parameter. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Rate limit exceeded. */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/health": {
         parameters: {
             query?: never;
@@ -214,7 +840,7 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
-    "/images/generations": {
+    "/images": {
         parameters: {
             query?: never;
             header?: never;
@@ -223,7 +849,12 @@ export interface paths {
         };
         get?: never;
         put?: never;
-        /** Generate images */
+        /**
+         * Generate images (legacy path)
+         * @description Supported compatibility surface — kept working indefinitely, but not the path for new integrations. Modern equivalent: `POST /images/generations`.
+         *
+         *     Backward-compatible alias of /images/generations.
+         */
         post: {
             parameters: {
                 query?: never;
@@ -247,6 +878,2370 @@ export interface paths {
                     };
                     content: {
                         "application/json": components["schemas"]["ImageGenerationResponse"];
+                    };
+                };
+                /** @description Invalid or unsupported request parameter. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Missing or invalid API key. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Insufficient balance or project spend limit reached. */
+                402: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Rate limit exceeded. */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Gateway error. */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/images/generations": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Generate images
+         * @description storage is optional and defaults to durable, which copies output to NinjaChat storage and returns a permanent URL. Set storage=provider to skip that copy for lower latency; provider mode returns either a temporary provider URL or b64_json plus mime_type.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Safely retry the same logical write without duplicate billing or execution. */
+                    "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["ImageGenerationRequest"];
+                };
+            };
+            responses: {
+                /** @description Generated images and unit cost. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ImageGenerationResponse"];
+                    };
+                };
+                /** @description Invalid or unsupported request parameter. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Missing or invalid API key. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Insufficient balance or project spend limit reached. */
+                402: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Rate limit exceeded. */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Gateway error. */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/management/audit": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * management.audit
+         * @description Requires usage:read. Changing routing also requires routing:write. Budgets are integer USD cents. Responses are not cacheable. Keys/secrets are shown only at creation/rotation. Mutations do not support automatic retries: read current resource state after an ambiguous failure. Standard limits: 120 reads/minute and 30 writes/minute per account.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    before?: string;
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Management operation result. Lists use a data array; key/project/audit lists include next_cursor (null at end). Key create/rotate returns key once plus data metadata. X-Audit-Status: pending means the operation succeeded but its completion audit append needs investigation using X-Request-ID. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": Record<string, never>;
+                    };
+                };
+                /** @description Invalid or unsupported request parameter. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Missing or invalid API key. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Insufficient balance or project spend limit reached. */
+                402: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Management scope is missing, or the account is unavailable. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Resource does not exist in this account. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Resource quota exceeded. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Rate limit exceeded. */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Gateway error. */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/management/balance": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * management.balance
+         * @description Requires usage:read. Changing routing also requires routing:write. Budgets are integer USD cents. Responses are not cacheable. Keys/secrets are shown only at creation/rotation. Mutations do not support automatic retries: read current resource state after an ambiguous failure. Standard limits: 120 reads/minute and 30 writes/minute per account.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Management operation result. Lists use a data array; key/project/audit lists include next_cursor (null at end). Key create/rotate returns key once plus data metadata. X-Audit-Status: pending means the operation succeeded but its completion audit append needs investigation using X-Request-ID. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": Record<string, never>;
+                    };
+                };
+                /** @description Invalid or unsupported request parameter. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Missing or invalid API key. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Insufficient balance or project spend limit reached. */
+                402: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Management scope is missing, or the account is unavailable. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Resource does not exist in this account. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Resource quota exceeded. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Rate limit exceeded. */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Gateway error. */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/management/keys": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * management.keys.list
+         * @description Requires keys:read. Changing routing also requires routing:write. Budgets are integer USD cents. Responses are not cacheable. Keys/secrets are shown only at creation/rotation. Mutations do not support automatic retries: read current resource state after an ambiguous failure. Standard limits: 120 reads/minute and 30 writes/minute per account.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    before?: string;
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Management operation result. Lists use a data array; key/project/audit lists include next_cursor (null at end). Key create/rotate returns key once plus data metadata. X-Audit-Status: pending means the operation succeeded but its completion audit append needs investigation using X-Request-ID. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": Record<string, never>;
+                    };
+                };
+                /** @description Invalid or unsupported request parameter. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Missing or invalid API key. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Insufficient balance or project spend limit reached. */
+                402: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Management scope is missing, or the account is unavailable. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Resource does not exist in this account. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Resource quota exceeded. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Rate limit exceeded. */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Gateway error. */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /**
+         * management.keys.create
+         * @description Requires keys:write. Changing routing also requires routing:write. Budgets are integer USD cents. Responses are not cacheable. Keys/secrets are shown only at creation/rotation. Mutations do not support automatic retries: read current resource state after an ambiguous failure. Standard limits: 120 reads/minute and 30 writes/minute per account.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        expiresInDays?: number | null;
+                        monthlyBudgetCents?: number | null;
+                        name: string;
+                        projectId?: string | null;
+                        readOnly?: boolean;
+                    };
+                };
+            };
+            responses: {
+                /** @description Management operation result. Lists use a data array; key/project/audit lists include next_cursor (null at end). Key create/rotate returns key once plus data metadata. X-Audit-Status: pending means the operation succeeded but its completion audit append needs investigation using X-Request-ID. */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": Record<string, never>;
+                    };
+                };
+                /** @description Invalid or unsupported request parameter. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Missing or invalid API key. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Insufficient balance or project spend limit reached. */
+                402: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Management scope is missing, or the account is unavailable. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Resource does not exist in this account. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Resource quota exceeded. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Rate limit exceeded. */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Gateway error. */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/management/keys/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * management.keys.retrieve
+         * @description Requires keys:read. Changing routing also requires routing:write. Budgets are integer USD cents. Responses are not cacheable. Keys/secrets are shown only at creation/rotation. Mutations do not support automatic retries: read current resource state after an ambiguous failure. Standard limits: 120 reads/minute and 30 writes/minute per account.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Management operation result. Lists use a data array; key/project/audit lists include next_cursor (null at end). Key create/rotate returns key once plus data metadata. X-Audit-Status: pending means the operation succeeded but its completion audit append needs investigation using X-Request-ID. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": Record<string, never>;
+                    };
+                };
+                /** @description Invalid or unsupported request parameter. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Missing or invalid API key. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Insufficient balance or project spend limit reached. */
+                402: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Management scope is missing, or the account is unavailable. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Resource does not exist in this account. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Resource quota exceeded. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Rate limit exceeded. */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Gateway error. */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        /**
+         * management.keys.revoke
+         * @description Requires keys:write. Changing routing also requires routing:write. Budgets are integer USD cents. Responses are not cacheable. Keys/secrets are shown only at creation/rotation. Mutations do not support automatic retries: read current resource state after an ambiguous failure. Standard limits: 120 reads/minute and 30 writes/minute per account.
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Management operation result. Lists use a data array; key/project/audit lists include next_cursor (null at end). Key create/rotate returns key once plus data metadata. X-Audit-Status: pending means the operation succeeded but its completion audit append needs investigation using X-Request-ID. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": Record<string, never>;
+                    };
+                };
+                /** @description Invalid or unsupported request parameter. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Missing or invalid API key. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Insufficient balance or project spend limit reached. */
+                402: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Management scope is missing, or the account is unavailable. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Resource does not exist in this account. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Resource quota exceeded. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Rate limit exceeded. */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Gateway error. */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        /**
+         * management.keys.update
+         * @description Requires keys:write. Changing routing also requires routing:write. Budgets are integer USD cents. Responses are not cacheable. Keys/secrets are shown only at creation/rotation. Mutations do not support automatic retries: read current resource state after an ambiguous failure. Standard limits: 120 reads/minute and 30 writes/minute per account.
+         */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        expiresInDays?: number | null;
+                        monthlyBudgetCents?: number | null;
+                        name?: string;
+                        projectId?: string | null;
+                        readOnly?: boolean;
+                    };
+                };
+            };
+            responses: {
+                /** @description Management operation result. Lists use a data array; key/project/audit lists include next_cursor (null at end). Key create/rotate returns key once plus data metadata. X-Audit-Status: pending means the operation succeeded but its completion audit append needs investigation using X-Request-ID. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": Record<string, never>;
+                    };
+                };
+                /** @description Invalid or unsupported request parameter. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Missing or invalid API key. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Insufficient balance or project spend limit reached. */
+                402: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Management scope is missing, or the account is unavailable. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Resource does not exist in this account. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Resource quota exceeded. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Rate limit exceeded. */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Gateway error. */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/management/keys/{id}/rotate": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * management.keys.rotate
+         * @description Requires keys:write. Changing routing also requires routing:write. Budgets are integer USD cents. Responses are not cacheable. Keys/secrets are shown only at creation/rotation. Mutations do not support automatic retries: read current resource state after an ambiguous failure. Standard limits: 120 reads/minute and 30 writes/minute per account.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Management operation result. Lists use a data array; key/project/audit lists include next_cursor (null at end). Key create/rotate returns key once plus data metadata. X-Audit-Status: pending means the operation succeeded but its completion audit append needs investigation using X-Request-ID. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": Record<string, never>;
+                    };
+                };
+                /** @description Invalid or unsupported request parameter. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Missing or invalid API key. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Insufficient balance or project spend limit reached. */
+                402: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Management scope is missing, or the account is unavailable. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Resource does not exist in this account. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Resource quota exceeded. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Rate limit exceeded. */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Gateway error. */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/management/projects": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * management.projects.list
+         * @description Requires projects:read. Changing routing also requires routing:write. Budgets are integer USD cents. Responses are not cacheable. Keys/secrets are shown only at creation/rotation. Mutations do not support automatic retries: read current resource state after an ambiguous failure. Standard limits: 120 reads/minute and 30 writes/minute per account.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    before?: string;
+                    limit?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Management operation result. Lists use a data array; key/project/audit lists include next_cursor (null at end). Key create/rotate returns key once plus data metadata. X-Audit-Status: pending means the operation succeeded but its completion audit append needs investigation using X-Request-ID. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": Record<string, never>;
+                    };
+                };
+                /** @description Invalid or unsupported request parameter. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Missing or invalid API key. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Insufficient balance or project spend limit reached. */
+                402: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Management scope is missing, or the account is unavailable. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Resource does not exist in this account. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Resource quota exceeded. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Rate limit exceeded. */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Gateway error. */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /**
+         * management.projects.create
+         * @description Requires projects:write. Changing routing also requires routing:write. Budgets are integer USD cents. Responses are not cacheable. Keys/secrets are shown only at creation/rotation. Mutations do not support automatic retries: read current resource state after an ambiguous failure. Standard limits: 120 reads/minute and 30 writes/minute per account.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        environment?: "development" | "staging" | "production";
+                        monthlyBudgetCents?: number | null;
+                        name: string;
+                        routingPolicy?: components["schemas"]["RoutingPolicy"] & (Record<string, never> | null);
+                    };
+                };
+            };
+            responses: {
+                /** @description Management operation result. Lists use a data array; key/project/audit lists include next_cursor (null at end). Key create/rotate returns key once plus data metadata. X-Audit-Status: pending means the operation succeeded but its completion audit append needs investigation using X-Request-ID. */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": Record<string, never>;
+                    };
+                };
+                /** @description Invalid or unsupported request parameter. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Missing or invalid API key. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Insufficient balance or project spend limit reached. */
+                402: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Management scope is missing, or the account is unavailable. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Resource does not exist in this account. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Resource quota exceeded. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Rate limit exceeded. */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Gateway error. */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/management/projects/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * management.projects.retrieve
+         * @description Requires projects:read. Changing routing also requires routing:write. Budgets are integer USD cents. Responses are not cacheable. Keys/secrets are shown only at creation/rotation. Mutations do not support automatic retries: read current resource state after an ambiguous failure. Standard limits: 120 reads/minute and 30 writes/minute per account.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Management operation result. Lists use a data array; key/project/audit lists include next_cursor (null at end). Key create/rotate returns key once plus data metadata. X-Audit-Status: pending means the operation succeeded but its completion audit append needs investigation using X-Request-ID. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": Record<string, never>;
+                    };
+                };
+                /** @description Invalid or unsupported request parameter. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Missing or invalid API key. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Insufficient balance or project spend limit reached. */
+                402: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Management scope is missing, or the account is unavailable. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Resource does not exist in this account. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Resource quota exceeded. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Rate limit exceeded. */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Gateway error. */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        /**
+         * management.projects.archive
+         * @description Requires projects:write. Changing routing also requires routing:write. Budgets are integer USD cents. Responses are not cacheable. Keys/secrets are shown only at creation/rotation. Mutations do not support automatic retries: read current resource state after an ambiguous failure. Standard limits: 120 reads/minute and 30 writes/minute per account.
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Management operation result. Lists use a data array; key/project/audit lists include next_cursor (null at end). Key create/rotate returns key once plus data metadata. X-Audit-Status: pending means the operation succeeded but its completion audit append needs investigation using X-Request-ID. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": Record<string, never>;
+                    };
+                };
+                /** @description Invalid or unsupported request parameter. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Missing or invalid API key. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Insufficient balance or project spend limit reached. */
+                402: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Management scope is missing, or the account is unavailable. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Resource does not exist in this account. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Resource quota exceeded. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Rate limit exceeded. */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Gateway error. */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        /**
+         * management.projects.update
+         * @description Requires projects:write. Changing routing also requires routing:write. Budgets are integer USD cents. Responses are not cacheable. Keys/secrets are shown only at creation/rotation. Mutations do not support automatic retries: read current resource state after an ambiguous failure. Standard limits: 120 reads/minute and 30 writes/minute per account.
+         */
+        patch: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": {
+                        /** @enum {string} */
+                        environment?: "development" | "staging" | "production";
+                        monthlyBudgetCents?: number | null;
+                        name?: string;
+                        routingPolicy?: components["schemas"]["RoutingPolicy"] & (Record<string, never> | null);
+                    };
+                };
+            };
+            responses: {
+                /** @description Management operation result. Lists use a data array; key/project/audit lists include next_cursor (null at end). Key create/rotate returns key once plus data metadata. X-Audit-Status: pending means the operation succeeded but its completion audit append needs investigation using X-Request-ID. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": Record<string, never>;
+                    };
+                };
+                /** @description Invalid or unsupported request parameter. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Missing or invalid API key. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Insufficient balance or project spend limit reached. */
+                402: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Management scope is missing, or the account is unavailable. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Resource does not exist in this account. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Resource quota exceeded. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Rate limit exceeded. */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Gateway error. */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        trace?: never;
+    };
+    "/management/usage": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * management.usage
+         * @description Requires usage:read. Changing routing also requires routing:write. Budgets are integer USD cents. Responses are not cacheable. Keys/secrets are shown only at creation/rotation. Mutations do not support automatic retries: read current resource state after an ambiguous failure. Standard limits: 120 reads/minute and 30 writes/minute per account.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Management operation result. Lists use a data array; key/project/audit lists include next_cursor (null at end). Key create/rotate returns key once plus data metadata. X-Audit-Status: pending means the operation succeeded but its completion audit append needs investigation using X-Request-ID. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": Record<string, never>;
+                    };
+                };
+                /** @description Invalid or unsupported request parameter. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Missing or invalid API key. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Insufficient balance or project spend limit reached. */
+                402: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Management scope is missing, or the account is unavailable. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Resource does not exist in this account. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Resource quota exceeded. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Rate limit exceeded. */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Gateway error. */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/management/webhooks": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * management.webhooks.list
+         * @description Requires webhooks:read. Changing routing also requires routing:write. Budgets are integer USD cents. Responses are not cacheable. Keys/secrets are shown only at creation/rotation. Mutations do not support automatic retries: read current resource state after an ambiguous failure. Standard limits: 120 reads/minute and 30 writes/minute per account.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Management operation result. Lists use a data array; key/project/audit lists include next_cursor (null at end). Key create/rotate returns key once plus data metadata. X-Audit-Status: pending means the operation succeeded but its completion audit append needs investigation using X-Request-ID. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": Record<string, never>;
+                    };
+                };
+                /** @description Invalid or unsupported request parameter. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Missing or invalid API key. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Insufficient balance or project spend limit reached. */
+                402: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Management scope is missing, or the account is unavailable. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Resource does not exist in this account. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Resource quota exceeded. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Rate limit exceeded. */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Gateway error. */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        /**
+         * management.webhooks.create
+         * @description Requires webhooks:write. Changing routing also requires routing:write. Budgets are integer USD cents. Responses are not cacheable. Keys/secrets are shown only at creation/rotation. Mutations do not support automatic retries: read current resource state after an ambiguous failure. Standard limits: 120 reads/minute and 30 writes/minute per account.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["WebhookCreateRequest"];
+                };
+            };
+            responses: {
+                /** @description Management operation result. Lists use a data array; key/project/audit lists include next_cursor (null at end). Key create/rotate returns key once plus data metadata. X-Audit-Status: pending means the operation succeeded but its completion audit append needs investigation using X-Request-ID. */
+                201: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": Record<string, never>;
+                    };
+                };
+                /** @description Invalid or unsupported request parameter. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Missing or invalid API key. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Insufficient balance or project spend limit reached. */
+                402: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Management scope is missing, or the account is unavailable. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Resource does not exist in this account. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Resource quota exceeded. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Rate limit exceeded. */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Gateway error. */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/management/webhooks/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        post?: never;
+        /**
+         * management.webhooks.delete
+         * @description Requires webhooks:write. Changing routing also requires routing:write. Budgets are integer USD cents. Responses are not cacheable. Keys/secrets are shown only at creation/rotation. Mutations do not support automatic retries: read current resource state after an ambiguous failure. Standard limits: 120 reads/minute and 30 writes/minute per account.
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Management operation result. Lists use a data array; key/project/audit lists include next_cursor (null at end). Key create/rotate returns key once plus data metadata. X-Audit-Status: pending means the operation succeeded but its completion audit append needs investigation using X-Request-ID. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": Record<string, never>;
+                    };
+                };
+                /** @description Invalid or unsupported request parameter. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Missing or invalid API key. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Insufficient balance or project spend limit reached. */
+                402: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Management scope is missing, or the account is unavailable. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Resource does not exist in this account. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Resource quota exceeded. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Rate limit exceeded. */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Gateway error. */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/management/webhooks/{id}/test": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * management.webhooks.test
+         * @description Requires webhooks:write. Changing routing also requires routing:write. Budgets are integer USD cents. Responses are not cacheable. Keys/secrets are shown only at creation/rotation. Mutations do not support automatic retries: read current resource state after an ambiguous failure. Standard limits: 120 reads/minute and 30 writes/minute per account.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Management operation result. Lists use a data array; key/project/audit lists include next_cursor (null at end). Key create/rotate returns key once plus data metadata. X-Audit-Status: pending means the operation succeeded but its completion audit append needs investigation using X-Request-ID. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": Record<string, never>;
+                    };
+                };
+                /** @description Invalid or unsupported request parameter. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Missing or invalid API key. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Insufficient balance or project spend limit reached. */
+                402: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Management scope is missing, or the account is unavailable. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Resource does not exist in this account. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Resource quota exceeded. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Rate limit exceeded. */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Gateway error. */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/management/webhooks/deliveries": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * management.webhooks.deliveries
+         * @description Requires webhooks:read. Changing routing also requires routing:write. Budgets are integer USD cents. Responses are not cacheable. Keys/secrets are shown only at creation/rotation. Mutations do not support automatic retries: read current resource state after an ambiguous failure. Standard limits: 120 reads/minute and 30 writes/minute per account.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    endpointId?: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Management operation result. Lists use a data array; key/project/audit lists include next_cursor (null at end). Key create/rotate returns key once plus data metadata. X-Audit-Status: pending means the operation succeeded but its completion audit append needs investigation using X-Request-ID. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": Record<string, never>;
+                    };
+                };
+                /** @description Invalid or unsupported request parameter. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Missing or invalid API key. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Insufficient balance or project spend limit reached. */
+                402: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Management scope is missing, or the account is unavailable. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Resource does not exist in this account. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Resource quota exceeded. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Rate limit exceeded. */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Gateway error. */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/management/whoami": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * management.whoami
+         * @description Requires any management key. Changing routing also requires routing:write. Budgets are integer USD cents. Responses are not cacheable. Keys/secrets are shown only at creation/rotation. Mutations do not support automatic retries: read current resource state after an ambiguous failure. Standard limits: 120 reads/minute and 30 writes/minute per account.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Management operation result. Lists use a data array; key/project/audit lists include next_cursor (null at end). Key create/rotate returns key once plus data metadata. X-Audit-Status: pending means the operation succeeded but its completion audit append needs investigation using X-Request-ID. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": Record<string, never>;
+                    };
+                };
+                /** @description Invalid or unsupported request parameter. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Missing or invalid API key. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Insufficient balance or project spend limit reached. */
+                402: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Management scope is missing, or the account is unavailable. */
+                403: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Resource does not exist in this account. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Resource quota exceeded. */
+                409: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Rate limit exceeded. */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Gateway error. */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/messages": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create an Anthropic-compatible message
+         * @description Messages compatibility for text, image inputs, JSON output schemas, function tools and SSE. Accepts Authorization bearer or x-api-key. Uses the same metered gateway, routing and idempotency as Chat Completions. Native server tools, file IDs and signed thinking history are not supported; unsupported parameters return explicit errors.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Safely retry the same logical write without duplicate billing or execution. */
+                    "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["AnthropicMessagesRequest"];
+                };
+            };
+            responses: {
+                /** @description Anthropic Message object or Messages SSE lifecycle. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": Record<string, never>;
+                        "text/event-stream": string;
                     };
                 };
                 /** @description Invalid or unsupported request parameter. */
@@ -385,6 +3380,45 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/network": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get public network statistics */
+        get: {
+            parameters: {
+                query?: {
+                    days?: number;
+                    top?: number;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Measured network volume, model share and provider standings. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": Record<string, never>;
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/openapi": {
         parameters: {
             query?: never;
@@ -409,6 +3443,189 @@ export interface paths {
                     };
                     content: {
                         "application/json": Record<string, never>;
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/pipelines": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create a multimodal pipeline
+         * @description Run up to five dependent chat, image and video steps as one durable async job.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Safely retry the same logical write without duplicate billing or execution. */
+                    "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            responses: {
+                /** @description Pipeline accepted. */
+                202: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": Record<string, never>;
+                    };
+                };
+                /** @description Invalid or unsupported request parameter. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Missing or invalid API key. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Insufficient balance or project spend limit reached. */
+                402: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Rate limit exceeded. */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Gateway error. */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/pipelines/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /** Get a multimodal pipeline */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Pipeline status and step outputs. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": Record<string, never>;
+                    };
+                };
+                /** @description Invalid or unsupported request parameter. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Missing or invalid API key. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Insufficient balance or project spend limit reached. */
+                402: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Pipeline not found. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Rate limit exceeded. */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Gateway error. */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
                     };
                 };
             };
@@ -524,6 +3741,45 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/pricing": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get the live price sheet
+         * @description Public prices generated from the same tables used by billing.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Current chat, image, video and search pricing. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": Record<string, never>;
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/requests/{id}": {
         parameters: {
             query?: never;
@@ -601,6 +3857,94 @@ export interface paths {
         };
         put?: never;
         post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/rerank": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /** Rerank documents */
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Safely retry the same logical write without duplicate billing or execution. */
+                    "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["RerankRequest"];
+                };
+            };
+            responses: {
+                /** @description Document relevance and metered usage. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["RerankResponse"];
+                    };
+                };
+                /** @description Invalid or unsupported request parameter. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Missing or invalid API key. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Insufficient balance or project spend limit reached. */
+                402: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Rate limit exceeded. */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Gateway error. */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
         delete?: never;
         options?: never;
         head?: never;
@@ -787,6 +4131,363 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/sessions": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create a chat session
+         * @description Supported compatibility surface — kept working indefinitely, but not the path for new integrations. Modern equivalent: `client-side message history on POST /responses`.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": Record<string, never>;
+                };
+            };
+            responses: {
+                /** @description Created or existing session. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": Record<string, never>;
+                    };
+                };
+                /** @description Invalid or unsupported request parameter. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Missing or invalid API key. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Insufficient balance or project spend limit reached. */
+                402: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Rate limit exceeded. */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Gateway error. */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sessions/{id}": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get a chat session
+         * @description Supported compatibility surface — kept working indefinitely, but not the path for new integrations. Modern equivalent: `client-side message history on POST /responses`.
+         */
+        get: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Session messages and metadata. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": Record<string, never>;
+                    };
+                };
+                /** @description Invalid or unsupported request parameter. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Missing or invalid API key. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Insufficient balance or project spend limit reached. */
+                402: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Session not found. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Rate limit exceeded. */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Gateway error. */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        /**
+         * Delete a chat session
+         * @description Supported compatibility surface — kept working indefinitely, but not the path for new integrations. Modern equivalent: `client-side message history on POST /responses`.
+         */
+        delete: {
+            parameters: {
+                query?: never;
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Session deleted. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": Record<string, never>;
+                    };
+                };
+                /** @description Invalid or unsupported request parameter. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Missing or invalid API key. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Insufficient balance or project spend limit reached. */
+                402: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Session not found. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Rate limit exceeded. */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Gateway error. */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/sessions/{id}/export": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Export a chat session
+         * @description Supported compatibility surface — kept working indefinitely, but not the path for new integrations. Modern equivalent: `client-side message history on POST /responses`.
+         */
+        get: {
+            parameters: {
+                query?: {
+                    format?: "json" | "markdown";
+                };
+                header?: never;
+                path: {
+                    id: string;
+                };
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description JSON or Markdown session export. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content?: never;
+                };
+                /** @description Invalid or unsupported request parameter. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Missing or invalid API key. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Insufficient balance or project spend limit reached. */
+                402: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Session not found. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Rate limit exceeded. */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Gateway error. */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/usage": {
         parameters: {
             query?: never;
@@ -868,6 +4569,196 @@ export interface paths {
         patch?: never;
         trace?: never;
     };
+    "/video": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        get?: never;
+        put?: never;
+        /**
+         * Create a video job (legacy path)
+         * @description Supported compatibility surface — kept working indefinitely, but not the path for new integrations. Modern equivalent: `POST /videos`.
+         *
+         *     Backward-compatible alias of /videos.
+         */
+        post: {
+            parameters: {
+                query?: never;
+                header?: {
+                    /** @description Safely retry the same logical write without duplicate billing or execution. */
+                    "Idempotency-Key"?: components["parameters"]["IdempotencyKey"];
+                };
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: {
+                content: {
+                    "application/json": components["schemas"]["VideoCreateRequest"];
+                };
+            };
+            responses: {
+                /** @description Queued video job. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["VideoCreateResponse"];
+                    };
+                };
+                /** @description Invalid or unsupported request parameter. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Missing or invalid API key. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Insufficient balance or project spend limit reached. */
+                402: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Rate limit exceeded. */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Gateway error. */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
+    "/video/status": {
+        parameters: {
+            query?: never;
+            header?: never;
+            path?: never;
+            cookie?: never;
+        };
+        /**
+         * Get a video job (legacy path)
+         * @description Supported compatibility surface — kept working indefinitely, but not the path for new integrations. Modern equivalent: `GET /videos/{id}`.
+         *
+         *     Query-string compatibility endpoint for /videos/{id}.
+         */
+        get: {
+            parameters: {
+                query: {
+                    request_id: string;
+                };
+                header?: never;
+                path?: never;
+                cookie?: never;
+            };
+            requestBody?: never;
+            responses: {
+                /** @description Video job status in the historical response envelope. */
+                200: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": Record<string, never>;
+                    };
+                };
+                /** @description Invalid or unsupported request parameter. */
+                400: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Missing or invalid API key. */
+                401: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Insufficient balance or project spend limit reached. */
+                402: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Video job not found. */
+                404: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Rate limit exceeded. */
+                429: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+                /** @description Gateway error. */
+                500: {
+                    headers: {
+                        [name: string]: unknown;
+                    };
+                    content: {
+                        "application/json": components["schemas"]["ErrorResponse"];
+                    };
+                };
+            };
+        };
+        put?: never;
+        post?: never;
+        delete?: never;
+        options?: never;
+        head?: never;
+        patch?: never;
+        trace?: never;
+    };
     "/videos": {
         parameters: {
             query?: never;
@@ -879,7 +4770,7 @@ export interface paths {
         put?: never;
         /**
          * Create a video job
-         * @description Submit an async video job. Poll GET /videos/{id}, or register a signed webhook (POST /webhooks or https://www.ninjachat.ai/developers/keys#webhooks) for video.completed / video.failed.
+         * @description Submit an async video job. Poll GET /videos/{id}, or register a signed webhook (POST /webhooks or https://www.ninjachat.ai/developers/webhooks) for video.completed / video.failed.
          */
         post: {
             parameters: {
@@ -1063,7 +4954,7 @@ export interface paths {
         };
         /**
          * List webhooks
-         * @description List HTTPS endpoints registered for video completion and spend-alert callbacks. Console: https://www.ninjachat.ai/developers/keys#webhooks
+         * @description List HTTPS endpoints registered for video completion and spend-alert callbacks. Console: https://www.ninjachat.ai/developers/webhooks
          */
         get: {
             parameters: {
@@ -1133,7 +5024,7 @@ export interface paths {
         put?: never;
         /**
          * Create a webhook
-         * @description Register an HTTPS URL. NinjaChat POSTs signed JSON for video.completed (includes video_url), video.failed (refunded), budget.alert (50/80/100% of a spend limit), and balance.low (prepaid $5/$1) so you do not have to poll video jobs. The signing secret is returned once. Console: https://www.ninjachat.ai/developers/keys#webhooks
+         * @description Register an HTTPS URL. NinjaChat POSTs signed JSON for video and pipeline completion, budget.alert (50/80/100% of a spend limit), and balance.low (prepaid $5/$1). The signing secret is returned once. Console: https://www.ninjachat.ai/developers/webhooks
          */
         post: {
             parameters: {
@@ -1451,6 +5342,149 @@ export interface paths {
 export type webhooks = Record<string, never>;
 export interface components {
     schemas: {
+        AnthropicMessagesRequest: {
+            max_tokens: number;
+            messages: {
+                content: string | ({
+                    text: string;
+                    /** @enum {string} */
+                    type: "text";
+                } | {
+                    source: {
+                        /** @enum {string} */
+                        type: "url";
+                        /** Format: uri */
+                        url: string;
+                    } | {
+                        data: string;
+                        /** @enum {string} */
+                        media_type: "image/jpeg" | "image/png" | "image/gif" | "image/webp";
+                        /** @enum {string} */
+                        type: "base64";
+                    };
+                    /** @enum {string} */
+                    type: "image";
+                } | {
+                    source: {
+                        data: string;
+                        /** @enum {string} */
+                        media_type: "application/pdf";
+                        /** @enum {string} */
+                        type: "base64";
+                    } | {
+                        /** @enum {string} */
+                        type: "url";
+                        /** Format: uri */
+                        url: string;
+                    } | {
+                        data: string;
+                        /** @enum {string} */
+                        media_type: "text/plain";
+                        /** @enum {string} */
+                        type: "text";
+                    };
+                    /** @enum {string} */
+                    type: "document";
+                } | {
+                    id: string;
+                    input: {
+                        [key: string]: unknown;
+                    };
+                    name: string;
+                    /** @enum {string} */
+                    type: "tool_use";
+                } | {
+                    content?: string | ({
+                        text: string;
+                        /** @enum {string} */
+                        type: "text";
+                    } | {
+                        source: {
+                            /** @enum {string} */
+                            type: "url";
+                            /** Format: uri */
+                            url: string;
+                        } | {
+                            data: string;
+                            /** @enum {string} */
+                            media_type: "image/jpeg" | "image/png" | "image/gif" | "image/webp";
+                            /** @enum {string} */
+                            type: "base64";
+                        };
+                        /** @enum {string} */
+                        type: "image";
+                    } | {
+                        source: {
+                            data: string;
+                            /** @enum {string} */
+                            media_type: "application/pdf";
+                            /** @enum {string} */
+                            type: "base64";
+                        } | {
+                            /** @enum {string} */
+                            type: "url";
+                            /** Format: uri */
+                            url: string;
+                        } | {
+                            data: string;
+                            /** @enum {string} */
+                            media_type: "text/plain";
+                            /** @enum {string} */
+                            type: "text";
+                        };
+                        /** @enum {string} */
+                        type: "document";
+                    })[];
+                    is_error?: boolean;
+                    tool_use_id: string;
+                    /** @enum {string} */
+                    type: "tool_result";
+                })[];
+                /** @enum {string} */
+                role: "user" | "assistant";
+            }[];
+            metadata?: {
+                user_id?: string;
+            };
+            model: string;
+            output_config?: {
+                format: {
+                    schema: {
+                        [key: string]: unknown;
+                    };
+                    /** @enum {string} */
+                    type: "json_schema";
+                };
+            };
+            routing?: components["schemas"]["RoutingPolicy"];
+            stop_sequences?: string[];
+            stream?: boolean;
+            system?: string | {
+                text: string;
+                /** @enum {string} */
+                type: "text";
+            }[];
+            temperature?: number;
+            tool_choice?: {
+                disable_parallel_tool_use?: boolean;
+                /** @enum {string} */
+                type: "auto" | "any" | "none";
+            } | {
+                disable_parallel_tool_use?: boolean;
+                name: string;
+                /** @enum {string} */
+                type: "tool";
+            };
+            tools?: {
+                description?: string;
+                input_schema: {
+                    [key: string]: unknown;
+                };
+                name: string;
+                strict?: boolean;
+            }[];
+            top_p?: number;
+        };
         BalanceResponse: {
             balance: string;
             balance_cents: number;
@@ -1461,11 +5495,13 @@ export interface components {
             request_id: string;
         };
         ChatCompletionResponse: {
+            balance?: string;
             choices: {
                 finish_reason: string | null;
                 index: number;
                 message: {
                     content: string | null;
+                    reasoning_content?: string;
                     /** @enum {string} */
                     role: "assistant";
                     tool_calls?: {
@@ -1479,9 +5515,21 @@ export interface components {
                     }[];
                 };
             }[];
+            cost?: {
+                images?: number;
+                per_image?: string;
+                per_video?: string;
+                this_request: string;
+            };
             cost_usd: number;
             created: number;
             id: string;
+            metadata?: {
+                group?: string;
+                latency_ms: number;
+                results_count?: number;
+                search_depth?: string;
+            };
             model: string;
             /** @enum {string} */
             object: "chat.completion";
@@ -1493,37 +5541,22 @@ export interface components {
         };
         ChatCompletionsRequest: {
             frequency_penalty?: number;
+            /** @description Maximum completion tokens, including reasoning where the provider counts it. Must fit the selected provider's output and context limits. Defaults to 2048 when omitted. */
             max_completion_tokens?: number;
             messages: ({
-                content: string | ({
+                content: string | {
                     text: string;
                     /** @enum {string} */
                     type: "text";
-                } | {
-                    image_url: {
-                        /** @enum {string} */
-                        detail?: "auto" | "low" | "high";
-                        url: string;
-                    };
-                    /** @enum {string} */
-                    type: "image_url";
-                })[];
+                }[];
                 /** @enum {string} */
                 role: "developer";
             } | {
-                content: string | ({
+                content: string | {
                     text: string;
                     /** @enum {string} */
                     type: "text";
-                } | {
-                    image_url: {
-                        /** @enum {string} */
-                        detail?: "auto" | "low" | "high";
-                        url: string;
-                    };
-                    /** @enum {string} */
-                    type: "image_url";
-                })[];
+                }[];
                 /** @enum {string} */
                 role: "system";
             } | {
@@ -1539,23 +5572,26 @@ export interface components {
                     };
                     /** @enum {string} */
                     type: "image_url";
+                } | {
+                    file: {
+                        file_data?: string;
+                        /** Format: uri */
+                        file_url?: string;
+                        filename?: string;
+                        /** @enum {string} */
+                        media_type?: "application/pdf" | "text/plain" | "text/markdown" | "text/csv" | "application/json";
+                    };
+                    /** @enum {string} */
+                    type: "file";
                 })[];
                 /** @enum {string} */
                 role: "user";
             } | {
-                content?: string | ({
+                content?: string | {
                     text: string;
                     /** @enum {string} */
                     type: "text";
-                } | {
-                    image_url: {
-                        /** @enum {string} */
-                        detail?: "auto" | "low" | "high";
-                        url: string;
-                    };
-                    /** @enum {string} */
-                    type: "image_url";
-                })[] | null;
+                }[] | null;
                 /** @enum {string} */
                 role: "assistant";
                 tool_calls?: {
@@ -1568,7 +5604,30 @@ export interface components {
                     type: "function";
                 }[];
             } | {
-                content: string;
+                content: string | ({
+                    text: string;
+                    /** @enum {string} */
+                    type: "text";
+                } | {
+                    image_url: {
+                        /** @enum {string} */
+                        detail?: "auto" | "low" | "high";
+                        url: string;
+                    };
+                    /** @enum {string} */
+                    type: "image_url";
+                } | {
+                    file: {
+                        file_data?: string;
+                        /** Format: uri */
+                        file_url?: string;
+                        filename?: string;
+                        /** @enum {string} */
+                        media_type?: "application/pdf" | "text/plain" | "text/markdown" | "text/csv" | "application/json";
+                    };
+                    /** @enum {string} */
+                    type: "file";
+                })[];
                 /** @enum {string} */
                 role: "tool";
                 tool_call_id: string;
@@ -1577,6 +5636,7 @@ export interface components {
             models?: string[];
             parallel_tool_calls?: boolean;
             presence_penalty?: number;
+            reasoning?: components["schemas"]["ChatReasoning"];
             response_format?: {
                 /** @enum {string} */
                 type: "text";
@@ -1628,6 +5688,12 @@ export interface components {
             top_p?: number;
             user?: string;
         };
+        ChatReasoning: {
+            /** @enum {string} */
+            effort?: "none" | "minimal" | "low" | "medium" | "high" | "xhigh";
+            enabled?: boolean;
+            max_tokens?: number;
+        };
         ChatUsage: {
             completion_tokens: number;
             completion_tokens_details?: {
@@ -1639,6 +5705,39 @@ export interface components {
                 cached_tokens?: number;
             };
             total_tokens: number;
+        };
+        EmbeddingsRequest: {
+            dimensions?: number;
+            /**
+             * @default float
+             * @enum {string}
+             */
+            encoding_format: "float" | "base64";
+            input: string | string[] | number[] | number[][];
+            /** @enum {string} */
+            input_type?: "query" | "document";
+            /** @enum {string} */
+            model: "text-embedding-3-small" | "voyage-4-large";
+            /** @default false */
+            truncation: boolean;
+            user?: string;
+        };
+        EmbeddingsResponse: {
+            cost_usd: number;
+            data: {
+                embedding: number[] | string;
+                index: number;
+                /** @enum {string} */
+                object: "embedding";
+            }[];
+            model: string;
+            /** @enum {string} */
+            object: "list";
+            request_id: string;
+            usage: {
+                prompt_tokens: number;
+                total_tokens: number;
+            };
         };
         ErrorResponse: {
             error: {
@@ -1654,28 +5753,63 @@ export interface components {
             /** Format: uri */
             image?: string;
             /**
+             * @description Image model ID. Legacy ninja-vision-1 resolves to seedream (Seedream 4.5); flux-pro-ultra resolves to flux-1-pro-ultra.
              * @default nano-banana-2
              * @enum {string}
              */
-            model: "nova-canvas" | "runway-gen4-image-turbo" | "seedream" | "recraft-v3" | "google-imagen-4" | "nano-banana" | "nano-banana-2" | "nano-banana-pro" | "flux-2-klein" | "flux-2-pro" | "flux-2-max" | "flux-2-flex" | "flux-schnell" | "flux-kontext-pro" | "flux-kontext-max" | "flux-1-pro-ultra" | "flux-1.1-pro" | "flux-1-dev" | "flux-1-fill" | "qwen-image-3" | "qwen-image-max" | "seedream-4.5" | "seedream-5-lite" | "seedream-5-pro" | "flux-2-klein-4b" | "flux-2-klein-9b" | "sdxl-turbo" | "pruna-p-image" | "wan-2.6-image" | "nano-banana-2-lite" | "bria-fibo" | "bria-3.2" | "qwen-image-edit-max" | "wan-2.7-image-edit" | "z-image-turbo" | "qwen-image-2512" | "flux-2-dev" | "stable-diffusion-3.5-large" | "qwen-image-edit-2511" | "flux-kontext-dev" | "grok-imagine" | "grok-imagine-image-2.0" | "grok-imagine-image-quality" | "gpt-image-2";
+            model: "nova-canvas" | "runway-gen4-image-turbo" | "seedream" | "recraft-v3" | "google-imagen-4" | "nano-banana" | "nano-banana-2" | "nano-banana-pro" | "flux-2-klein" | "flux-2-pro" | "flux-2-max" | "flux-2-flex" | "flux-schnell" | "flux-kontext-pro" | "flux-kontext-max" | "flux-1-pro-ultra" | "flux-1.1-pro" | "flux-1-dev" | "flux-1-fill" | "qwen-image-3" | "qwen-image-max" | "seedream-4.5" | "seedream-5-lite" | "seedream-5-pro" | "flux-2-klein-4b" | "flux-2-klein-9b" | "sdxl-turbo" | "pruna-p-image" | "wan-2.6-image" | "nano-banana-2-lite" | "bria-fibo" | "bria-3.2" | "qwen-image-edit-max" | "wan-2.7-image-edit" | "z-image-turbo" | "qwen-image-2512" | "flux-2-dev" | "stable-diffusion-3.5-large" | "qwen-image-edit-plus" | "hidream-l1-fast" | "flux-krea-dev" | "qwen-image-edit-2511" | "flux-kontext-dev" | "grok-imagine" | "grok-imagine-image-2.0" | "grok-imagine-image-quality" | "gpt-image-2" | "ideogram-v3-quality" | "ideogram-v3-turbo" | "google-imagen-4-ultra" | "google-imagen-4-fast" | "luma-photon" | "minimax-image-01" | "ninja-vision-1" | "flux-pro-ultra" | "flux-dev";
             /** @default 1 */
             n: number;
             prompt: string;
+            /** @description Reference image URLs, in order. Use this or image, not both. The maximum depends on the model. */
+            reference_images?: string[];
             /**
              * @default 1920x1920
              * @enum {string}
              */
             size: "1920x1920" | "2560x1440" | "1440x2560";
+            /**
+             * @description Optional; defaults to durable. durable copies the output to NinjaChat storage and returns a permanent URL. provider skips that copy for lower latency and returns the provider's temporary URL or inline base64 payload.
+             * @default durable
+             * @enum {string}
+             */
+            storage: "durable" | "provider";
             width?: number;
         };
         ImageGenerationResponse: {
+            balance?: string;
+            cost?: {
+                images?: number;
+                per_image?: string;
+                per_video?: string;
+                this_request: string;
+            };
             cost_usd: number;
             created: number;
-            data: {
+            data: ({
                 revised_prompt?: string | null;
                 /** Format: uri */
                 url: string;
-            }[];
+            } | {
+                b64_json: string;
+                mime_type: string;
+                revised_prompt?: string | null;
+            })[];
+            images?: ({
+                revised_prompt?: string | null;
+                /** Format: uri */
+                url: string;
+            } | {
+                b64_json: string;
+                mime_type: string;
+                revised_prompt?: string | null;
+            })[];
+            metadata?: {
+                group?: string;
+                latency_ms: number;
+                results_count?: number;
+                search_depth?: string;
+            };
             model: string;
             provider: string;
             request_id: string;
@@ -1683,6 +5817,8 @@ export interface components {
                 provider_attempts: string[];
                 retries: number;
             };
+            /** @enum {string} */
+            storage: "durable" | "provider";
             usage: {
                 images_generated: number;
             };
@@ -1697,37 +5833,22 @@ export interface components {
         };
         PresetChatCompletionsRequest: {
             frequency_penalty?: number;
+            /** @description Maximum completion tokens, including reasoning where the provider counts it. Must fit the selected provider's output and context limits. Defaults to 2048 when omitted. */
             max_completion_tokens?: number;
             messages: ({
-                content: string | ({
+                content: string | {
                     text: string;
                     /** @enum {string} */
                     type: "text";
-                } | {
-                    image_url: {
-                        /** @enum {string} */
-                        detail?: "auto" | "low" | "high";
-                        url: string;
-                    };
-                    /** @enum {string} */
-                    type: "image_url";
-                })[];
+                }[];
                 /** @enum {string} */
                 role: "developer";
             } | {
-                content: string | ({
+                content: string | {
                     text: string;
                     /** @enum {string} */
                     type: "text";
-                } | {
-                    image_url: {
-                        /** @enum {string} */
-                        detail?: "auto" | "low" | "high";
-                        url: string;
-                    };
-                    /** @enum {string} */
-                    type: "image_url";
-                })[];
+                }[];
                 /** @enum {string} */
                 role: "system";
             } | {
@@ -1743,23 +5864,26 @@ export interface components {
                     };
                     /** @enum {string} */
                     type: "image_url";
+                } | {
+                    file: {
+                        file_data?: string;
+                        /** Format: uri */
+                        file_url?: string;
+                        filename?: string;
+                        /** @enum {string} */
+                        media_type?: "application/pdf" | "text/plain" | "text/markdown" | "text/csv" | "application/json";
+                    };
+                    /** @enum {string} */
+                    type: "file";
                 })[];
                 /** @enum {string} */
                 role: "user";
             } | {
-                content?: string | ({
+                content?: string | {
                     text: string;
                     /** @enum {string} */
                     type: "text";
-                } | {
-                    image_url: {
-                        /** @enum {string} */
-                        detail?: "auto" | "low" | "high";
-                        url: string;
-                    };
-                    /** @enum {string} */
-                    type: "image_url";
-                })[] | null;
+                }[] | null;
                 /** @enum {string} */
                 role: "assistant";
                 tool_calls?: {
@@ -1772,7 +5896,30 @@ export interface components {
                     type: "function";
                 }[];
             } | {
-                content: string;
+                content: string | ({
+                    text: string;
+                    /** @enum {string} */
+                    type: "text";
+                } | {
+                    image_url: {
+                        /** @enum {string} */
+                        detail?: "auto" | "low" | "high";
+                        url: string;
+                    };
+                    /** @enum {string} */
+                    type: "image_url";
+                } | {
+                    file: {
+                        file_data?: string;
+                        /** Format: uri */
+                        file_url?: string;
+                        filename?: string;
+                        /** @enum {string} */
+                        media_type?: "application/pdf" | "text/plain" | "text/markdown" | "text/csv" | "application/json";
+                    };
+                    /** @enum {string} */
+                    type: "file";
+                })[];
                 /** @enum {string} */
                 role: "tool";
                 tool_call_id: string;
@@ -1781,6 +5928,7 @@ export interface components {
             models?: string[];
             parallel_tool_calls?: boolean;
             presence_penalty?: number;
+            reasoning?: components["schemas"]["ChatReasoning"];
             response_format?: {
                 /** @enum {string} */
                 type: "text";
@@ -1831,6 +5979,12 @@ export interface components {
             }[];
             top_p?: number;
             user?: string;
+        };
+        ProviderAttemptReceipt: {
+            attempt_index: number;
+            /** @enum {string} */
+            outcome: "served" | "failed_over" | "failed";
+            provider: string;
         };
         PublicModel: {
             brand: string;
@@ -1873,7 +6027,7 @@ export interface components {
                 };
                 typicalRequestUsd?: number;
                 /** @enum {string} */
-                unit: "token" | "image" | "second" | "request";
+                unit: "token" | "image" | "second" | "request" | "character";
             };
             pricingNote?: string;
             providers: {
@@ -1969,12 +6123,42 @@ export interface components {
             };
             ttfb_ms: number | null;
         };
+        RerankRequest: {
+            documents: string[];
+            /** @enum {string} */
+            model: "rerank-2.5" | "rerank-2.5-lite";
+            query: string;
+            /** @default false */
+            return_documents: boolean;
+            top_n?: number;
+            /** @default false */
+            truncation: boolean;
+        };
+        RerankResponse: {
+            cost_usd: number;
+            model: string;
+            provider: string;
+            request_id: string;
+            results: {
+                document?: {
+                    text: string;
+                };
+                index: number;
+                relevance_score: number;
+            }[];
+            usage: {
+                total_tokens: number;
+            };
+        };
         ResponseObject: {
             cost_usd: number;
             created_at: number;
             error: null;
             id: string;
-            incomplete_details: null;
+            incomplete_details: {
+                /** @enum {string} */
+                reason: "max_output_tokens" | "content_filter";
+            } | null;
             instructions: string | null;
             max_output_tokens: number | null;
             metadata: {
@@ -1984,6 +6168,17 @@ export interface components {
             /** @enum {string} */
             object: "response";
             output: ({
+                id: string;
+                /** @enum {string} */
+                status: "completed" | "incomplete";
+                summary: {
+                    text: string;
+                    /** @enum {string} */
+                    type: "summary_text";
+                }[];
+                /** @enum {string} */
+                type: "reasoning";
+            } | {
                 content: {
                     annotations: unknown[];
                     text: string;
@@ -1994,7 +6189,7 @@ export interface components {
                 /** @enum {string} */
                 role: "assistant";
                 /** @enum {string} */
-                status: "completed";
+                status: "completed" | "incomplete";
                 /** @enum {string} */
                 type: "message";
             } | {
@@ -2003,7 +6198,7 @@ export interface components {
                 id: string;
                 name: string;
                 /** @enum {string} */
-                status: "completed";
+                status: "completed" | "incomplete";
                 /** @enum {string} */
                 type: "function_call";
             })[];
@@ -2014,7 +6209,7 @@ export interface components {
             request_id: string;
             routing: components["schemas"]["RoutingSummary"];
             /** @enum {string} */
-            status: "completed";
+            status: "completed" | "incomplete";
             /** @enum {boolean} */
             store: false;
             usage: {
@@ -2042,6 +6237,15 @@ export interface components {
                     image_url: string;
                     /** @enum {string} */
                     type: "input_image";
+                } | {
+                    file_data?: string;
+                    /** Format: uri */
+                    file_url?: string;
+                    filename?: string;
+                    /** @enum {string} */
+                    media_type?: "application/pdf" | "text/plain" | "text/markdown" | "text/csv" | "application/json";
+                    /** @enum {string} */
+                    type: "input_file";
                 })[];
                 /** @enum {string} */
                 role: "developer" | "system" | "user" | "assistant";
@@ -2055,11 +6259,31 @@ export interface components {
                 type: "function_call";
             } | {
                 call_id: string;
-                output: string;
+                output: string | ({
+                    text: string;
+                    /** @enum {string} */
+                    type: "input_text";
+                } | {
+                    /** @enum {string} */
+                    detail?: "auto" | "low" | "high";
+                    image_url: string;
+                    /** @enum {string} */
+                    type: "input_image";
+                } | {
+                    file_data?: string;
+                    /** Format: uri */
+                    file_url?: string;
+                    filename?: string;
+                    /** @enum {string} */
+                    media_type?: "application/pdf" | "text/plain" | "text/markdown" | "text/csv" | "application/json";
+                    /** @enum {string} */
+                    type: "input_file";
+                })[];
                 /** @enum {string} */
                 type: "function_call_output";
             })[];
             instructions?: string;
+            /** @description Maximum completion tokens, including reasoning where the provider counts it. Must fit the selected provider's output and context limits. Defaults to 2048 when omitted. */
             max_output_tokens?: number;
             metadata?: {
                 [key: string]: string;
@@ -2067,6 +6291,7 @@ export interface components {
             model?: string;
             models?: string[];
             parallel_tool_calls?: boolean;
+            reasoning?: components["schemas"]["ChatReasoning"];
             routing?: components["schemas"]["RoutingPolicy"];
             /**
              * @default false
@@ -2114,6 +6339,18 @@ export interface components {
             top_p?: number;
             user?: string;
         };
+        RouterDecisionSummary: {
+            candidates: string[];
+            /** @enum {string} */
+            classified_by: "regex" | "llm" | "llm-cached";
+            considered: Record<string, never>[];
+            /** @enum {string} */
+            id: "ninja/auto";
+            /** @enum {string|null} */
+            override: "long_context" | "multilingual" | null;
+            reasoning: string;
+            task: string;
+        };
         RoutingPolicy: {
             /** @default true */
             allow_fallbacks: boolean;
@@ -2142,8 +6379,10 @@ export interface components {
             data_policy: "default" | "no_training" | "zero_retention";
             fallbacks_allowed: boolean;
             provider: string | null;
+            provider_attempts?: components["schemas"]["ProviderAttemptReceipt"][];
             requested_models: string[];
             resolved_model: string;
+            router?: components["schemas"]["RouterDecisionSummary"];
             /** @enum {string} */
             source?: "request" | "project" | "default";
             /** @enum {string} */
@@ -2175,12 +6414,25 @@ export interface components {
         };
         SearchResponse: {
             answer: string | null;
+            balance?: string;
+            cost?: {
+                images?: number;
+                per_image?: string;
+                per_video?: string;
+                this_request: string;
+            };
             cost_usd: number;
             follow_up_questions: string[];
             images?: {
                 description: string | null;
                 url: string;
             }[];
+            metadata?: {
+                group?: string;
+                latency_ms: number;
+                results_count?: number;
+                search_depth?: string;
+            };
             /** @enum {string} */
             object: "search.results";
             provider: string;
@@ -2192,6 +6444,20 @@ export interface components {
                 title: string;
                 url: string;
             }[];
+        };
+        SpeechRequest: {
+            input: string;
+            /** @enum {string} */
+            model: "tts-1" | "tts-1-hd";
+            /**
+             * @default mp3
+             * @enum {string}
+             */
+            response_format: "mp3" | "opus" | "aac" | "flac" | "wav" | "pcm";
+            /** @default 1 */
+            speed: number;
+            /** @enum {string} */
+            voice: "alloy" | "ash" | "coral" | "echo" | "fable" | "onyx" | "nova" | "sage" | "shimmer";
         };
         UsageResponse: {
             by_endpoint: {
@@ -2221,7 +6487,7 @@ export interface components {
              * @default 16:9
              * @enum {string}
              */
-            aspect_ratio: "16:9" | "9:16";
+            aspect_ratio: "16:9" | "9:16" | "1:1";
             /** @default 8 */
             duration: number;
             /** Format: uri */
@@ -2234,7 +6500,8 @@ export interface components {
              * @default veo-3.1-fast
              * @enum {string}
              */
-            model: "nova-reel" | "runway-gen4.5" | "seedance-2" | "seedance-2.0-fast" | "seedance-2-mini" | "seedance-2.0" | "seedance-1.5-pro" | "seedance-lite" | "seedance-pro" | "grok-imagine-video" | "grok-imagine-video-1.5" | "kling-2.5-turbo" | "kling-3-pro" | "wan-2.7" | "wan-2.7-i2v" | "wan-2.7-r2v" | "wan-2.6" | "wan-2.6-i2v" | "wan-2.2-t2v-a14b" | "fast-wan-2.2" | "fast-wan-qad" | "pruna-p-video" | "pixverse-6" | "pixverse-6-i2v" | "cosmos-3-nano" | "cosmos-3-super" | "vidu-q3" | "veo-3.1" | "veo-3.1-fast" | "kling-video" | "google-veo-2" | "google-veo-3-fast";
+            model: "nova-reel" | "runway-gen4.5" | "flux-3-video" | "minimax-h3" | "hailuo-2.3" | "hailuo-2.3-fast" | "happyhorse-1.1" | "ray-3.2" | "seedance-2.5" | "seedance-2" | "seedance-2.0-fast" | "seedance-2-mini" | "seedance-2.0" | "seedance-1.5-pro" | "seedance-lite" | "seedance-pro" | "grok-imagine-video" | "grok-imagine-video-1.5" | "kling-2.5-turbo" | "kling-3-pro" | "wan-2.7" | "wan-2.7-i2v" | "wan-2.7-r2v" | "wan-2.6" | "wan-2.6-i2v" | "wan-2.2-t2v-a14b" | "fast-wan-2.2" | "fast-wan-qad" | "pruna-p-video" | "pixverse-6" | "pixverse-6-i2v" | "cosmos-3-nano" | "cosmos-3-super" | "vidu-q3" | "veo-3.1" | "veo-3.1-fast" | "kling-video" | "google-veo-2" | "google-veo-3-fast" | "google-veo-3.1" | "google-veo-3.1-fast" | "google-veo" | "seedance-2-video" | "seedance-video";
+            negative_prompt?: string;
             prompt: string;
             /** Format: uri */
             reference_audio?: string;
@@ -2245,14 +6512,30 @@ export interface components {
             watermark: boolean;
         };
         VideoCreateResponse: {
+            balance?: string;
+            cost?: {
+                images?: number;
+                per_image?: string;
+                per_video?: string;
+                this_request: string;
+            };
             cost_usd: number;
             id: string;
+            message?: string;
+            metadata?: {
+                group?: string;
+                latency_ms: number;
+                results_count?: number;
+                search_depth?: string;
+            };
             model: string;
             /** @enum {string} */
             object: "video";
             request_id: string;
             /** @enum {string} */
             status: "queued";
+            /** @description Original request receipt ID, also returned in X-Request-ID. Use id or request_id to poll the video job. */
+            trace_request_id?: string;
         };
         VideoStatusResponse: {
             error?: string;
@@ -2269,6 +6552,8 @@ export interface components {
             /** @default [
              *       "video.completed",
              *       "video.failed",
+             *       "pipeline.completed",
+             *       "pipeline.failed",
              *       "budget.alert",
              *       "balance.low"
              *     ] */
@@ -2318,7 +6603,7 @@ export interface components {
             url: string;
         };
         /** @enum {string} */
-        WebhookEvent: "video.completed" | "video.failed" | "budget.alert" | "balance.low";
+        WebhookEvent: "video.completed" | "video.failed" | "pipeline.completed" | "pipeline.failed" | "budget.alert" | "balance.low";
         WebhookListResponse: {
             endpoints: components["schemas"]["WebhookEndpoint"][];
         };
