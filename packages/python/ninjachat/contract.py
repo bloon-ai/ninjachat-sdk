@@ -1,3 +1,3 @@
 """Generated NinjaChat API v1 contract identity. Do not edit."""
 
-CONTRACT_SHA256 = "bcf3aa3d26a7927cecba74a931de447808ace44b3998e140635af714c4192815"
+CONTRACT_SHA256 = "6016dd39f511a7254fe7683c41eea5372ae39922610a333a03fec41393c3a3a3"

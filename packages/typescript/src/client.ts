@@ -4,25 +4,46 @@
  * Reliability model:
  * - Automatic retries (default 2) on 429 and 5xx, honoring `Retry-After`,
  *   with exponential backoff + jitter otherwise.
- * - Billed, non-idempotent calls (chat, images, video, search) are NEVER
- *   retried without an `Idempotency-Key`: when retries are enabled and no key
- *   was supplied, the SDK generates one via crypto.randomUUID() so a retry can
- *   only replay — never double-bill. A 409 `request_in_flight` on a keyed
- *   request is also retried (the first attempt is still running server-side).
+ * - Billed, non-idempotent calls (chat, presets, images, video, search,
+ *   compare, batch, pipelines) are NEVER retried without an
+ *   `Idempotency-Key`: when retries are enabled and no key was supplied, the
+ *   SDK generates one via crypto.randomUUID() so a retry can only replay —
+ *   never double-bill. A 409 `request_in_flight` on a keyed request is also
+ *   retried (the first attempt is still running server-side).
  * - Endpoints with no idempotency support (webhooks.create) are never
  *   auto-retried.
  */
 
 import { NinjaChatError } from "./errors.js";
-import { iterateChatStream, iterateResponseStream } from "./streaming.js";
+import {
+  iterateBatchStream,
+  iterateChatStream,
+  iterateCompareStream,
+  iterateResponseStream,
+  iterateMessagesStream,
+} from "./streaming.js";
 import type {
   BalanceResponse,
+  BatchCreateParams,
+  BatchResponse,
+  BatchStreamEvent,
   ChatCompletion,
   ChatCompletionChunk,
   ChatCompletionCreateParams,
+  CompareCreateParams,
+  CompareResponse,
+  CompareStreamEvent,
+  EstimateCreateParams,
+  EstimateResponse,
+  HealthResponse,
   ImageGenerateParams,
   ImageGenerateResponse,
   ModelList,
+  PipelineCreateParams,
+  PipelineCreateResponse,
+  PipelineState,
+  PresetRunParams,
+  PricingResponse,
   PublicModel,
   RequestRecord,
   ResponseCreateParams,
@@ -41,161 +62,96 @@ import type {
   WebhookTestResult,
 } from "./types.js";
 
-export const DEFAULT_BASE_URL = "https://www.ninjachat.ai/api/v1";
-const DEFAULT_MAX_RETRIES = 2;
-const MAX_BACKOFF_MS = 30_000;
+import { NinjaChatTransport } from "./transport.js";
+import { ManagementResource } from "./management.js";
+import type { NinjaChatOptions, RequestOptions } from "./transport.js";
+export { DEFAULT_BASE_URL } from "./transport.js";
+export type { NinjaChatOptions, RequestOptions } from "./transport.js";
 
-export interface NinjaChatOptions {
-  /** Your secret API key (nj_sk_...). Never expose it in browser or client-side code. */
-  apiKey: string;
-  /** Defaults to https://www.ninjachat.ai/api/v1. HTTPS is required except on localhost. */
-  baseUrl?: string;
-  /**
-   * Allows a secret key in a browser runtime. This exposes the key to end users
-   * and is almost never safe. Server-side use is strongly recommended.
-   */
-  dangerouslyAllowBrowser?: boolean;
-  /** Retries on 429/5xx (default 2). Set 0 to disable. */
-  maxRetries?: number;
-  /** Per-request timeout in ms (default 120000; video submits use 300000). */
-  timeoutMs?: number;
-  /** Custom fetch implementation (testing, proxies). */
-  fetch?: typeof globalThis.fetch;
-}
-
-export interface RequestOptions {
-  /**
-   * Idempotency-Key for billed calls. When omitted and retries are enabled,
-   * the SDK generates one so retries are billing-safe.
-   */
-  idempotencyKey?: string;
-  /** Override the client-level maxRetries for this call. */
-  maxRetries?: number;
-  /** Abort signal. */
-  signal?: AbortSignal;
-  /** Override the client-level timeout for this call. */
-  timeoutMs?: number;
-}
-
-interface InternalRequest {
-  method: "GET" | "POST" | "DELETE";
-  path: string;
-  query?: Record<string, string | undefined>;
-  body?: unknown;
-  /** Endpoint accepts an Idempotency-Key header (billed generation calls). */
-  supportsIdempotency?: boolean;
-  /** Safe to retry without an idempotency key (GET/DELETE, or naturally idempotent). */
-  idempotentMethod?: boolean;
-  stream?: boolean;
-  options?: RequestOptions;
-  timeoutMs?: number;
-}
-
-const RETRIABLE_STATUSES = new Set([429, 500, 502, 503, 504]);
-
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
-function retryDelayMs(response: Response | null, attempt: number): number {
-  const retryAfter = response?.headers.get("retry-after");
-  if (retryAfter) {
-    const seconds = Number(retryAfter);
-    if (Number.isFinite(seconds) && seconds >= 0) {
-      return Math.min(seconds * 1000, MAX_BACKOFF_MS);
-    }
-    const date = Date.parse(retryAfter);
-    if (!Number.isNaN(date)) {
-      return Math.min(Math.max(0, date - Date.now()), MAX_BACKOFF_MS);
-    }
-  }
-  const base = 500 * 2 ** attempt;
-  return Math.min(base + Math.random() * base, MAX_BACKOFF_MS);
-}
-
-function isBrowserRuntime(): boolean {
-  return typeof window !== "undefined" && typeof document !== "undefined";
-}
-
-function normalizeBaseUrl(value: string): string {
-  let url: URL;
+async function pollJob<T extends { status: string }>(
+  id: string, options: WaitForOptions, retrieve: (options: RequestOptions) => Promise<T>,
+  failed: (state: T) => NinjaChatError,
+): Promise<T> {
+  const pollMs = options.pollMs ?? 5_000;
+  const timeoutMs = options.timeoutMs ?? 600_000;
+  if (!Number.isFinite(pollMs) || pollMs <= 0 || !Number.isFinite(timeoutMs) || timeoutMs <= 0)
+    throw new NinjaChatError({ message: "pollMs and timeoutMs must be positive finite numbers.", status: 0, code: "invalid_options" });
+  const controller = new AbortController();
+  const abort = () => controller.abort();
+  options.signal?.addEventListener("abort", abort, { once: true });
+  if (options.signal?.aborted) abort();
+  const timer = setTimeout(abort, timeoutMs);
   try {
-    url = new URL(value);
-  } catch {
-    throw new NinjaChatError({
-      message: "baseUrl must be a valid absolute URL.",
-      status: 0,
-      code: "invalid_base_url",
-    });
+    for (;;) {
+      const state = await retrieve({ ...options, signal: controller.signal });
+      if (state.status === "completed") return state;
+      if (state.status === "failed") throw failed(state);
+      await new Promise<void>((resolve, reject) => {
+        const done = () => { controller.signal.removeEventListener("abort", cancel); resolve(); };
+        const sleep = setTimeout(done, pollMs);
+        const cancel = () => { clearTimeout(sleep); controller.signal.removeEventListener("abort", cancel); reject(new NinjaChatError({ message: "Polling aborted.", status: 0, code: "aborted" })); };
+        controller.signal.addEventListener("abort", cancel, { once: true });
+        if (controller.signal.aborted) cancel();
+      });
+    }
+  } catch (error) {
+    if (controller.signal.aborted && !options.signal?.aborted)
+      throw new NinjaChatError({ message: `Timed out waiting for ${id}. This stops polling, not the server job; retrieve its status later.`, status: 0, code: "poll_timeout", requestId: id });
+    throw error;
+  } finally {
+    clearTimeout(timer);
+    options.signal?.removeEventListener("abort", abort);
   }
-
-  const localHostnames = new Set(["localhost", "127.0.0.1", "::1"]);
-  const secure = url.protocol === "https:";
-  const localHttp = url.protocol === "http:" && localHostnames.has(url.hostname);
-  if (!secure && !localHttp) {
-    throw new NinjaChatError({
-      message: "baseUrl must use HTTPS. Plain HTTP is allowed only for localhost development.",
-      status: 0,
-      code: "insecure_base_url",
-    });
-  }
-  if (url.username || url.password || url.search || url.hash) {
-    throw new NinjaChatError({
-      message: "baseUrl must not contain credentials, query parameters, or a fragment.",
-      status: 0,
-      code: "invalid_base_url",
-    });
-  }
-
-  return url.toString().replace(/\/+$/, "");
 }
 
-export class NinjaChat {
-  readonly #apiKey: string;
-  private readonly baseUrl: string;
-  private readonly maxRetries: number;
-  private readonly timeoutMs: number;
-  private readonly fetchFn: typeof globalThis.fetch;
+export class NinjaChat extends NinjaChatTransport {
+  readonly rerank: RerankResource;
+  readonly audio: AudioResource;
+  readonly messages: MessagesResource;
+  readonly sessions: SessionsResource;
 
   readonly chat: ChatResource;
   readonly responses: ResponsesResource;
+  readonly presets: PresetsResource;
   readonly models: ModelsResource;
+  readonly pricing: PricingResource;
   readonly images: ImagesResource;
   readonly videos: VideosResource;
   readonly search: SearchResource;
+  readonly embeddings: EmbeddingsResource;
+  readonly compare: CompareResource;
+  readonly batch: BatchResource;
+  readonly estimate: EstimateResource;
+  readonly pipelines: PipelinesResource;
   readonly requests: RequestsResource;
   readonly webhooks: WebhooksResource;
+  readonly management: ManagementResource;
+  readonly battles: BattlesResource;
 
   constructor(options: NinjaChatOptions) {
-    if (!options?.apiKey) {
-      throw new NinjaChatError({
-        message: "Missing apiKey. Create one at https://www.ninjachat.ai/developers/keys",
-        status: 0,
-        code: "missing_api_key",
-      });
-    }
-    if (isBrowserRuntime() && !options.dangerouslyAllowBrowser) {
-      throw new NinjaChatError({
-        message:
-          "Secret NinjaChat API keys must not be used in browser code. Keep API calls on your server, or set dangerouslyAllowBrowser only if you fully accept the exposure risk.",
-        status: 0,
-        code: "browser_api_key_forbidden",
-      });
-    }
-    this.#apiKey = options.apiKey;
-    this.baseUrl = normalizeBaseUrl(options.baseUrl ?? DEFAULT_BASE_URL);
-    this.maxRetries = options.maxRetries ?? DEFAULT_MAX_RETRIES;
-    this.timeoutMs = options.timeoutMs ?? 120_000;
-    this.fetchFn = options.fetch ?? globalThis.fetch.bind(globalThis);
+    super(options);
+    this.rerank = new RerankResource(this);
+    this.audio = new AudioResource(this);
+    this.messages = new MessagesResource(this);
+    this.sessions = new SessionsResource(this);
 
     this.chat = new ChatResource(this);
     this.responses = new ResponsesResource(this);
+    this.presets = new PresetsResource(this);
     this.models = new ModelsResource(this);
+    this.pricing = new PricingResource(this);
     this.images = new ImagesResource(this);
     this.videos = new VideosResource(this);
     this.search = new SearchResource(this);
+    this.embeddings = new EmbeddingsResource(this);
+    this.compare = new CompareResource(this);
+    this.batch = new BatchResource(this);
+    this.estimate = new EstimateResource(this);
+    this.pipelines = new PipelinesResource(this);
     this.requests = new RequestsResource(this);
     this.webhooks = new WebhooksResource(this);
+    this.management = new ManagementResource(this);
+    this.battles = new BattlesResource(this);
   }
 
   /** GET /balance — current prepaid credit balance. */
@@ -219,123 +175,75 @@ export class NinjaChat {
     });
   }
 
-  /** @internal */
-  async requestJson<T>(req: InternalRequest): Promise<T> {
-    const response = await this.requestRaw(req);
-    return (await response.json()) as T;
+  /** GET /health — public measured gateway health and resilience snapshot. */
+  async health(options?: RequestOptions): Promise<HealthResponse> {
+    return this.requestJson<HealthResponse>({ method: "GET", path: "/health", idempotentMethod: true, options });
   }
 
-  /** @internal Runs the request with retry/idempotency semantics; returns the ok Response. */
-  async requestRaw(req: InternalRequest): Promise<Response> {
-    const options = req.options ?? {};
-    const maxRetries = options.maxRetries ?? this.maxRetries;
-    const timeoutMs = options.timeoutMs ?? req.timeoutMs ?? this.timeoutMs;
-
-    let idempotencyKey = options.idempotencyKey;
-    if (req.supportsIdempotency && !idempotencyKey && maxRetries > 0) {
-      // Never retry a billed call without a key — generate one so a retry can
-      // only replay the stored result, never double-charge.
-      idempotencyKey = crypto.randomUUID();
-    }
-    const retriable = Boolean(req.idempotentMethod || idempotencyKey);
-    const attempts = retriable ? maxRetries + 1 : 1;
-
-    const url = new URL(this.baseUrl + req.path);
-    for (const [k, v] of Object.entries(req.query ?? {})) {
-      if (v !== undefined) url.searchParams.set(k, v);
-    }
-
-    const headers: Record<string, string> = {
-      Authorization: `Bearer ${this.#apiKey}`,
-      Accept: req.stream ? "text/event-stream" : "application/json",
-    };
-    if (req.body !== undefined) headers["Content-Type"] = "application/json";
-    if (idempotencyKey) headers["Idempotency-Key"] = idempotencyKey;
-
-    let lastError: NinjaChatError | null = null;
-
-    for (let attempt = 0; attempt < attempts; attempt++) {
-      const controller = new AbortController();
-      const timer = setTimeout(() => controller.abort(), timeoutMs);
-      const onOuterAbort = () => controller.abort();
-      options.signal?.addEventListener("abort", onOuterAbort, { once: true });
-
-      let response: Response | null = null;
-      try {
-        response = await this.fetchFn(url.toString(), {
-          method: req.method,
-          headers,
-          body: req.body !== undefined ? JSON.stringify(req.body) : undefined,
-          signal: controller.signal,
-        });
-      } catch (err) {
-        lastError = new NinjaChatError({
-          message:
-            options.signal?.aborted
-              ? "Request aborted."
-              : err instanceof Error
-                ? `Network error: ${err.message}`
-                : "Network error.",
-          status: 0,
-          code: options.signal?.aborted ? "aborted" : "network_error",
-        });
-        if (options.signal?.aborted || attempt === attempts - 1) {
-          clearTimeout(timer);
-          options.signal?.removeEventListener("abort", onOuterAbort);
-          throw lastError;
-        }
-        clearTimeout(timer);
-        options.signal?.removeEventListener("abort", onOuterAbort);
-        await sleep(retryDelayMs(null, attempt));
-        continue;
-      }
-
-      // Streamed responses hand the body (and the timeout teardown) to the caller.
-      if (response.ok) {
-        if (req.stream) {
-          // Clear the request timeout — streams have their own lifetime.
-          clearTimeout(timer);
-          options.signal?.removeEventListener("abort", onOuterAbort);
-        } else {
-          clearTimeout(timer);
-          options.signal?.removeEventListener("abort", onOuterAbort);
-        }
-        return response;
-      }
-
-      clearTimeout(timer);
-      options.signal?.removeEventListener("abort", onOuterAbort);
-
-      let errorBody: unknown = null;
-      try {
-        errorBody = await response.json();
-      } catch {
-        // non-JSON error body
-      }
-      const error = NinjaChatError.fromResponse(
-        response.status,
-        errorBody,
-        response.headers.get("x-request-id")
-      );
-      lastError = error;
-
-      const inFlightRetry =
-        response.status === 409 && error.code === "request_in_flight" && Boolean(idempotencyKey);
-      const shouldRetry =
-        retriable &&
-        attempt < attempts - 1 &&
-        (RETRIABLE_STATUSES.has(response.status) || inFlightRetry);
-
-      if (!shouldRetry) throw error;
-      await sleep(retryDelayMs(response, attempt));
-    }
-
-    // Unreachable, but keeps TypeScript satisfied.
-    throw lastError ?? new NinjaChatError({ message: "Request failed.", status: 0, code: "unknown" });
+  async network(options?: RequestOptions): Promise<Record<string, unknown>> {
+    return this.requestJson({ method: "GET", path: "/network", idempotentMethod: true, options });
   }
+
 }
 
 // ── Resources ────────────────────────────────────────────────────────────────
+
+class RerankResource {
+  constructor(private readonly client: NinjaChat) {}
+  create(params: import("./types.js").RerankCreateParams, options?: RequestOptions): Promise<import("./types.js").RerankResponse> {
+    return this.client.requestJson({method:"POST",path:"/rerank",body:params,supportsIdempotency:true,options});
+  }
+}
+class AudioResource {
+  readonly speech: SpeechResource;
+  constructor(client: NinjaChat) { this.speech = new SpeechResource(client); }
+}
+class SpeechResource {
+  constructor(private readonly client: NinjaChat) {}
+  /** Binary Response: use arrayBuffer(), blob(), or body; metadata is in headers. */
+  create(params: import("./types.js").SpeechCreateParams, options?: RequestOptions): Promise<Response> {
+    return this.client.requestRaw({method:"POST",path:"/audio/speech",body:params,supportsIdempotency:true,options});
+  }
+}
+class MessagesResource {
+  constructor(private readonly client: NinjaChat) {}
+  create(params: import("./types.js").MessagesCreateParams & {stream:true}, options?: RequestOptions): Promise<AsyncGenerator<import("./types.js").MessageStreamEvent>>;
+  create(params: import("./types.js").MessagesCreateParams & {stream?:false}, options?: RequestOptions): Promise<import("./types.js").AnthropicMessage>;
+  create(params: import("./types.js").MessagesCreateParams, options?: RequestOptions): Promise<import("./types.js").AnthropicMessage | AsyncGenerator<import("./types.js").MessageStreamEvent>>;
+  async create(params: import("./types.js").MessagesCreateParams, options?: RequestOptions) {
+    const request = {method:"POST" as const,path:"/messages",body:params,supportsIdempotency:true,stream:params.stream,options};
+    return params.stream ? iterateMessagesStream(await this.client.requestRaw(request)) : this.client.requestJson<import("./types.js").AnthropicMessage>(request);
+  }
+}
+
+class SessionsResource {
+  constructor(private readonly client: NinjaChat) {}
+  create(params: import("./types.js").SessionCreateParams = {}, options?: RequestOptions): Promise<import("./types.js").SessionCreated> {
+    return this.client.requestJson({method:"POST",path:"/sessions",body:params,options});
+  }
+  retrieve(id: string, options?: RequestOptions): Promise<import("./types.js").SessionState> {
+    return this.client.requestJson({method:"GET",path:`/sessions/${encodeURIComponent(id)}`,idempotentMethod:true,options});
+  }
+  delete(id: string, options?: RequestOptions): Promise<{deleted:boolean}> {
+    return this.client.requestJson({method:"DELETE",path:`/sessions/${encodeURIComponent(id)}`,options});
+  }
+  export(id: string, format: "markdown", options?: RequestOptions): Promise<string>;
+  export(id: string, format?: "json", options?: RequestOptions): Promise<import("./types.js").SessionExport>;
+  async export(id: string, format: "json" | "markdown" = "json", options?: RequestOptions) {
+    const request = {method:"GET" as const,path:`/sessions/${encodeURIComponent(id)}/export`,query:{format},idempotentMethod:true,options};
+    return format === "markdown" ? (await this.client.requestRaw(request)).text() : this.client.requestJson<import("./types.js").SessionExport>(request);
+  }
+}
+
+class BattlesResource {
+  constructor(private readonly client: NinjaChat) {}
+  list(type: "leaderboard" | "recent" = "leaderboard", options?: RequestOptions): Promise<Record<string, unknown>> {
+    return this.client.requestJson({ method: "GET", path: "/battles", query: { type }, idempotentMethod: true, options });
+  }
+  create(params: { ranked_models: string[]; compare_request_id: string; prompt_snippet?: string; rank_by?: string; category?: string }, options?: RequestOptions): Promise<Record<string, unknown>> {
+    return this.client.requestJson({ method: "POST", path: "/battles", body: params, options });
+  }
+}
 
 class ChatResource {
   readonly completions: ChatCompletionsResource;
@@ -371,6 +279,48 @@ class ResponsesResource {
   }
 }
 
+/**
+ * Saved model + routing bundles, applied server-side. The preset owns the
+ * model chain, routing policy, system prompt and parameters, so config ships
+ * without a redeploy and the caller sends only its turn.
+ */
+class PresetsResource {
+  constructor(private readonly client: NinjaChat) {}
+
+  /**
+   * POST /presets/{slug}/chat/completions — same request and response as
+   * chat.completions.create, except `model`/`models` are optional: pass one
+   * to override the preset's chain for this call only.
+   */
+  run(slug: string, params: PresetRunParams & { stream: true }, options?: RequestOptions): Promise<AsyncIterable<ChatCompletionChunk>>;
+  run(slug: string, params: PresetRunParams & { stream?: false }, options?: RequestOptions): Promise<ChatCompletion>;
+  async run(
+    slug: string,
+    params: PresetRunParams,
+    options?: RequestOptions,
+  ): Promise<ChatCompletion | AsyncIterable<ChatCompletionChunk>> {
+    const path = `/presets/${encodeURIComponent(slug)}/chat/completions`;
+    if (params.stream) {
+      const response = await this.client.requestRaw({
+        method: "POST",
+        path,
+        body: params,
+        supportsIdempotency: true,
+        stream: true,
+        options,
+      });
+      return iterateChatStream(response);
+    }
+    return this.client.requestJson<ChatCompletion>({
+      method: "POST",
+      path,
+      body: params,
+      supportsIdempotency: true,
+      options,
+    });
+  }
+}
+
 class ModelsResource {
   constructor(private readonly client: NinjaChat) {}
 
@@ -381,6 +331,24 @@ class ModelsResource {
   retrieve(id: string, options?: RequestOptions): Promise<PublicModel> {
     return this.client.requestJson<PublicModel>({
       method: "GET", path: `/models/${encodeURIComponent(id)}`, idempotentMethod: true, options,
+    });
+  }
+}
+
+class PricingResource {
+  constructor(private readonly client: NinjaChat) {}
+
+  /**
+   * GET /pricing — the machine-readable rate sheet billing itself uses, so a
+   * price claim anywhere can be checked against it. Public endpoint; the key
+   * is ignored.
+   */
+  retrieve(options?: RequestOptions): Promise<PricingResponse> {
+    return this.client.requestJson<PricingResponse>({
+      method: "GET",
+      path: "/pricing",
+      idempotentMethod: true,
+      options,
     });
   }
 }
@@ -424,7 +392,7 @@ class ChatCompletionsResource {
 class ImagesResource {
   constructor(private readonly client: NinjaChat) {}
 
-  /** POST /images/generations — generate images at catalog-defined unit pricing. */
+  /** POST /images/generations — durable by default; storage="provider" skips the persistence hop. */
   generate(params: ImageGenerateParams, options?: RequestOptions): Promise<ImageGenerateResponse> {
     return this.client.requestJson<ImageGenerateResponse>({
       method: "POST",
@@ -475,33 +443,15 @@ class VideosResource {
    * — the charge was refunded server-side) or timeout (`poll_timeout`).
    */
   async waitFor(requestId: string, options: WaitForOptions = {}): Promise<VideoStatusResponse> {
-    const pollMs = options.pollMs ?? 5_000;
-    const deadline = Date.now() + (options.timeoutMs ?? 600_000);
+    return pollJob(requestId, options, opts => this.retrieve(requestId, opts), state =>
+      new NinjaChatError({ message: state.error || "Video generation failed.", status: 200, code: "generation_failed", requestId }));
+  }
+}
 
-    for (;;) {
-      const status = await this.retrieve(requestId, {
-        signal: options.signal,
-        maxRetries: options.maxRetries,
-      });
-      if (status.status === "completed") return status;
-      if (status.status === "failed") {
-        throw new NinjaChatError({
-          message: status.error || "Video generation failed (charge refunded).",
-          status: 200,
-          code: "generation_failed",
-          requestId,
-        });
-      }
-      if (Date.now() + pollMs > deadline) {
-        throw new NinjaChatError({
-          message: `Timed out waiting for video job ${requestId}. It may still complete — keep polling videos.retrieve().`,
-          status: 0,
-          code: "poll_timeout",
-          requestId,
-        });
-      }
-      await sleep(pollMs);
-    }
+class EmbeddingsResource {
+  constructor(private readonly client: NinjaChat) {}
+  create(params: import("./types.js").EmbeddingCreateParams, options?: RequestOptions): Promise<import("./types.js").EmbeddingResponse> {
+    return this.client.requestJson({method:"POST",path:"/embeddings",body:params,supportsIdempotency:true,options});
   }
 }
 
@@ -517,6 +467,145 @@ class SearchResource {
       supportsIdempotency: true,
       options,
     });
+  }
+}
+
+class CompareResource {
+  constructor(private readonly client: NinjaChat) {}
+
+  /**
+   * POST /compare — one prompt against several concrete models, returned
+   * ranked by quality, speed and cost. Every model is held and settled under
+   * one request id; a model that fails costs nothing and lands in `failed`.
+   *
+   * Streaming interleaves per-model token deltas and closes with a `rankings`
+   * event. A streamed comparison cannot be replayed from its idempotency key.
+   */
+  create(params: CompareCreateParams & { stream: true }, options?: RequestOptions): Promise<AsyncIterable<CompareStreamEvent>>;
+  create(params: CompareCreateParams & { stream?: false }, options?: RequestOptions): Promise<CompareResponse>;
+  async create(
+    params: CompareCreateParams,
+    options?: RequestOptions,
+  ): Promise<CompareResponse | AsyncIterable<CompareStreamEvent>> {
+    if (params.stream) {
+      const response = await this.client.requestRaw({
+        method: "POST",
+        path: "/compare",
+        body: params,
+        supportsIdempotency: true,
+        stream: true,
+        options,
+      });
+      return iterateCompareStream(response);
+    }
+    return this.client.requestJson<CompareResponse>({
+      method: "POST",
+      path: "/compare",
+      body: params,
+      supportsIdempotency: true,
+      options,
+    });
+  }
+}
+
+class BatchResource {
+  constructor(private readonly client: NinjaChat) {}
+
+  /**
+   * POST /batch — up to 20 independent chat requests fanned out in parallel
+   * under one hold, one request id and one settlement. Each job keeps its own
+   * fallback chain, so `results[i].model` is the model that actually served.
+   *
+   * Streaming emits a `result` per job as it lands, then a `summary`. A
+   * streamed batch cannot be replayed from its idempotency key.
+   */
+  create(params: BatchCreateParams & { stream: true }, options?: RequestOptions): Promise<AsyncIterable<BatchStreamEvent>>;
+  create(params: BatchCreateParams & { stream?: false }, options?: RequestOptions): Promise<BatchResponse>;
+  async create(
+    params: BatchCreateParams,
+    options?: RequestOptions,
+  ): Promise<BatchResponse | AsyncIterable<BatchStreamEvent>> {
+    if (params.stream) {
+      const response = await this.client.requestRaw({
+        method: "POST",
+        path: "/batch",
+        body: params,
+        supportsIdempotency: true,
+        stream: true,
+        timeoutMs: 300_000,
+        options,
+      });
+      return iterateBatchStream(response);
+    }
+    return this.client.requestJson<BatchResponse>({
+      method: "POST",
+      path: "/batch",
+      body: params,
+      supportsIdempotency: true,
+      timeoutMs: 300_000,
+      options,
+    });
+  }
+}
+
+class EstimateResource {
+  constructor(private readonly client: NinjaChat) {}
+
+  /**
+   * POST /estimate — price a request before running it, from the same pricing
+   * engine and token estimator that settle real traffic. Public endpoint (the
+   * key is ignored), nothing is deducted, and the call is free of side effects
+   * so it retries without an idempotency key.
+   */
+  create(params: EstimateCreateParams, options?: RequestOptions): Promise<EstimateResponse> {
+    return this.client.requestJson<EstimateResponse>({
+      method: "POST",
+      path: "/estimate",
+      body: params,
+      idempotentMethod: true,
+      options,
+    });
+  }
+}
+
+class PipelinesResource {
+  constructor(private readonly client: NinjaChat) {}
+
+  /**
+   * POST /pipelines — up to 5 chat/image/video steps run in order, with
+   * `{{stepId.output}}` / `{{stepId.url}}` interpolation between them. The full
+   * price is reserved up front and unexecuted steps refund automatically.
+   * Returns immediately (202) with the id to poll.
+   */
+  create(params: PipelineCreateParams, options?: RequestOptions): Promise<PipelineCreateResponse> {
+    return this.client.requestJson<PipelineCreateResponse>({
+      method: "POST",
+      path: "/pipelines",
+      body: params,
+      supportsIdempotency: true,
+      options,
+    });
+  }
+
+  /** GET /pipelines/{id} — per-step status, output and cost. Polling also drives the run forward. */
+  retrieve(pipelineId: string, options?: RequestOptions): Promise<PipelineState> {
+    return this.client.requestJson<PipelineState>({
+      method: "GET",
+      path: `/pipelines/${encodeURIComponent(pipelineId)}`,
+      idempotentMethod: true,
+      options,
+    });
+  }
+
+  /**
+   * Poll until the pipeline settles. Resolves with the completed state; throws
+   * NinjaChatError on failure (`pipeline_failed` — unexecuted steps were
+   * refunded server-side) or timeout (`poll_timeout`).
+   */
+  async waitFor(pipelineId: string, options: WaitForOptions = {}): Promise<PipelineState> {
+    return pollJob(pipelineId, options, opts => this.retrieve(pipelineId, opts), state =>
+      new NinjaChatError({ message: state.error ? `Pipeline step "${state.error.step_id}" failed: ${state.error.message}` : "Pipeline failed.",
+        status: 200, code: "pipeline_failed", requestId: pipelineId }));
   }
 }
 
