@@ -46,7 +46,7 @@ jobs:
           python -m build packages/python --outdir packages/python/dist
           python -m twine check packages/python/dist/*
       - name: Preserve npm package for the isolated publish job
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: npm-package
           path: |
@@ -55,7 +55,7 @@ jobs:
           if-no-files-found: error
           retention-days: 1
       - name: Preserve Python packages for the isolated publish job
-        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7
         with:
           name: pypi-package
           path: packages/python/dist/*
